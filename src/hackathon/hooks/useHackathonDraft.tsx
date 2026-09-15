@@ -82,6 +82,13 @@ const initialState: HackathonState = {
   telemetry: [],
 };
 
+function buildDraftSnakeOrder(participantCount: number, poolSize: number): number[] {
+  const maxRounds = 3;
+  const cap = Math.min(poolSize, participantCount * maxRounds);
+  const rounds = Math.max(1, Math.ceil(cap / participantCount));
+  return buildSnakeOrder(participantCount, rounds).slice(0, cap);
+}
+
 function participantNames(count: number): string[] {
   const roles = [
     "CXO sponsor",
@@ -144,6 +151,17 @@ export function HackathonDraftProvider({ children }: { children: ReactNode }) {
     return () => clearTimeout(timer);
   }, [state]);
 
+  // Recover sessions stuck on Run after all use cases were drafted (older bug).
+  useEffect(() => {
+    if (
+      state.phase === "draft" &&
+      state.pool.length > 0 &&
+      state.picks.length >= state.pool.length
+    ) {
+      setState((prev) => ({ ...prev, phase: "outcome" }));
+    }
+  }, [state.phase, state.picks.length, state.pool.length]);
+
   const setUser = useCallback(
     (user: GoogleUser | null) => {
       setState((prev) => ({ ...prev, user }));
@@ -168,8 +186,7 @@ export function HackathonDraftProvider({ children }: { children: ReactNode }) {
     setState((prev) => {
       const pool = rankCases(getIndustryCases(prev.intake.industryStack)).slice(0, 10);
       const participants = participantNames(prev.intake.headcount);
-      const rounds = 3;
-      const snakeOrder = buildSnakeOrder(participants.length, rounds);
+      const snakeOrder = buildDraftSnakeOrder(participants.length, pool.length);
       return {
         ...prev,
         phase: "plan",
@@ -213,7 +230,8 @@ export function HackathonDraftProvider({ children }: { children: ReactNode }) {
           { useCaseId, owner, round, contested },
         ];
         const nextIndex = prev.draftIndex + 1;
-        const done = nextIndex >= prev.snakeOrder.length;
+        const done =
+          nextIndex >= prev.snakeOrder.length || picks.length >= prev.pool.length;
 
         return {
           ...prev,

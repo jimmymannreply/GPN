@@ -15,6 +15,7 @@ export function JourneyPageHackathon() {
     startDraft,
     pickUseCase,
     setHandoffAudience,
+    advanceToOutcome,
     rankedShortlist,
     currentPicker,
     availableCases,
@@ -141,7 +142,7 @@ export function JourneyPageHackathon() {
                   <h2 className="text-lg font-semibold">Plan generation</h2>
                   <p className="mt-1 text-sm text-dl-text-secondary">
                     Ten pre-scored use cases · snake order for {state.participants.length}{" "}
-                    participants · 3 rounds
+                    participants · {state.snakeOrder.length} picks
                   </p>
                   <p className="mt-2 text-xs text-dl-text-secondary">
                     Order: {state.participants.join(" → ")} (snake reverses each round)
@@ -181,8 +182,20 @@ export function JourneyPageHackathon() {
                     />
                   ))}
                 </div>
-                {availableCases.length === 0 && (
-                  <p className="text-sm text-dl-text-secondary">All picks made — review outcomes.</p>
+                {availableCases.length === 0 && state.picks.length > 0 && state.phase === "draft" && (
+                  <div className="rounded-dl border border-dl-border bg-dl-surface p-4">
+                    <p className="text-sm text-dl-text-secondary">
+                      All use cases drafted — review the ranked shortlist.
+                    </p>
+                    <button
+                      type="button"
+                      data-testid="view-outcome"
+                      onClick={advanceToOutcome}
+                      className="mt-3 rounded-dl bg-dl-brand px-4 py-2 text-sm font-semibold text-white"
+                    >
+                      View outcome
+                    </button>
+                  </div>
                 )}
               </section>
             )}
