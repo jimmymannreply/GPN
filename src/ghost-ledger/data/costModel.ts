@@ -1,3 +1,6 @@
+import type { GeminiBlueprint } from "@/shared/gemini/geminiBlueprint";
+import { buildGeminiBlueprint } from "@/shared/gemini/geminiBlueprint";
+
 export interface LedgerIntake {
   customerName: string;
   industryStack: string;
@@ -47,29 +50,54 @@ export interface FreezeOption {
   title: string;
   summary: string;
   savingsPercent: number;
+  geminiBlueprint: GeminiBlueprint;
+}
+
+function freezeOption(
+  intake: LedgerIntake,
+  id: string,
+  title: string,
+  summary: string,
+  savingsPercent: number,
+  tags: string[]
+): FreezeOption {
+  const stack = intake.industryStack.split(/[·|]/).slice(1).join(" · ") || intake.industryStack;
+  return {
+    id,
+    title,
+    summary,
+    savingsPercent,
+    geminiBlueprint: buildGeminiBlueprint(title, summary, tags, stack),
+  };
 }
 
 export function buildFreezeOptions(intake: LedgerIntake): FreezeOption[] {
   const industry = intake.industryStack.split(/[·|]/)[0]?.trim() || "operations";
   return [
-    {
-      id: "agent-deflect",
-      title: `Agent deflection for ${industry} support`,
-      summary: `Automate tier-1 on ${intake.industryStack} — targets ticket volume and handle time.`,
-      savingsPercent: 0.35,
-    },
-    {
-      id: "process-copilot",
-      title: `Manual work copilot — ${intake.customerName}`,
-      summary: `Remove repeat steps driving ${intake.hoursLostPerWeek}h/week of manual work.`,
-      savingsPercent: 0.42,
-    },
-    {
-      id: "retention-agent",
-      title: `Churn early-warning & save plays`,
-      summary: `Intervene before revenue walks — addresses $${intake.monthlyChurnRevenue.toLocaleString()}/mo churn exposure.`,
-      savingsPercent: 0.28,
-    },
+    freezeOption(
+      intake,
+      "agent-deflect",
+      `Gemini agent deflection for ${industry} support`,
+      `Automate tier-1 on ${intake.industryStack} — targets ticket volume and handle time.`,
+      0.35,
+      ["support", "CX"]
+    ),
+    freezeOption(
+      intake,
+      "process-copilot",
+      `Gemini work copilot — ${intake.customerName}`,
+      `Remove repeat steps driving ${intake.hoursLostPerWeek}h/week of manual work.`,
+      0.42,
+      ["operations", "productivity"]
+    ),
+    freezeOption(
+      intake,
+      "retention-agent",
+      `Gemini churn early-warning & save plays`,
+      `Intervene before revenue walks — addresses $${intake.monthlyChurnRevenue.toLocaleString()}/mo churn exposure.`,
+      0.28,
+      ["analytics", "CX"]
+    ),
   ];
 }
 

@@ -1,5 +1,6 @@
 import type { IndustryKey, UseCaseCandidate } from "@/hackathon/data/useCaseLibrary";
 import { compositeScore } from "@/hackathon/data/useCaseLibrary";
+import { attachGeminiToUseCase } from "@/shared/gemini/geminiBlueprint";
 
 export interface IntakeTailoring {
   customerName: string;
@@ -738,7 +739,8 @@ export function generateIntakeUseCases(intake: IntakeTailoring): {
 
   const merged = [...anchors, ...verticalPool]
     .sort((a, b) => compositeScore(b) - compositeScore(a))
-    .slice(0, 10);
+    .slice(0, 10)
+    .map((uc) => attachGeminiToUseCase(uc, ctx.stackPhrase));
 
   return {
     vertical: ctx.vertical,

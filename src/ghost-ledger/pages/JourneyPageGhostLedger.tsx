@@ -7,6 +7,7 @@ import { GhostLedgerHandoff } from "@/ghost-ledger/components/GhostLedgerHandoff
 import { GoogleSignInGateGhost } from "@/ghost-ledger/components/GoogleSignInGateGhost";
 import { TickingLedger } from "@/ghost-ledger/components/TickingLedger";
 import { useGhostLedger } from "@/ghost-ledger/hooks/useGhostLedger";
+import { GeminiBlueprintPanel, GeminiFlowMini, GeminiStackRibbon } from "@/shared/gemini/GeminiShowcase";
 
 export function JourneyPageGhostLedger() {
   const gl = useGhostLedger();
@@ -51,6 +52,15 @@ export function JourneyPageGhostLedger() {
         <main className="mx-auto grid max-w-6xl gap-6 px-6 py-8 lg:grid-cols-[1fr_280px]">
           <div className="space-y-6">
             <PhaseStepper phase={state.phase} />
+            {state.phase !== "intake" && (
+              <GeminiStackRibbon
+                stackPhrase={
+                  state.intake.industryStack.split(/[·|]/).slice(1).join(" · ") ||
+                  state.intake.industryStack
+                }
+              />
+            )}
+            {state.phase !== "intake" && <GeminiFlowMini />}
             <AgentPanel message={agentMessage} accent={state.brandAccent} />
 
             {state.phase === "intake" && (
@@ -228,6 +238,9 @@ export function JourneyPageGhostLedger() {
                               Reverses ~
                               {formatUsd(state.breakdown!.monthlyTotal * opt.savingsPercent)}/mo
                             </p>
+                            <div className="mt-3">
+                              <GeminiBlueprintPanel blueprint={opt.geminiBlueprint} compact />
+                            </div>
                           </button>
                         ))}
                       </div>
@@ -244,6 +257,16 @@ export function JourneyPageGhostLedger() {
                   {state.frozenAtSeconds}s. Monthly reversal committed:{" "}
                   <strong>{formatUsd(state.committedMonthlySavings)}</strong>.
                 </p>
+                {state.freezeOptions.find((o) => o.id === state.selectedFreezeId)?.geminiBlueprint && (
+                  <div className="mt-4">
+                    <GeminiBlueprintPanel
+                      blueprint={
+                        state.freezeOptions.find((o) => o.id === state.selectedFreezeId)!
+                          .geminiBlueprint
+                      }
+                    />
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={gl.goToHandoff}

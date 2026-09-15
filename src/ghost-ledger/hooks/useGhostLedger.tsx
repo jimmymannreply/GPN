@@ -282,8 +282,8 @@ export function GhostLedgerProvider({ children }: { children: ReactNode }) {
           : "The ledger is still running — freeze or let it count.";
       case "handoff":
         return state.handoffAudience === "partner"
-          ? "Partner path: file the frozen figure as value justification and apply for DAF."
-          : "Customer path: send the frozen ledger to their Google PDM as the next step.";
+          ? "Partner path: file the frozen figure plus Gemini pilot scope and apply for DAF."
+          : "Customer path: send the frozen ledger and Gemini reversal plan to their Google PDM.";
       default:
         return "";
     }

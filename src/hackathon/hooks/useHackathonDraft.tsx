@@ -342,7 +342,7 @@ export function HackathonDraftProvider({ children }: { children: ReactNode }) {
       case "intake":
         return `Welcome — I'm your ${brandName} hackathon agent. We'll scope a 90‑minute Use‑Case Draft for ${intake.customerName || "your customer"}: three intake questions plus headcount, then a live snake draft.`;
       case "plan":
-        return `Plan ready for ${state.curatedIndustry ? industryLabel(state.curatedIndustry) : intake.industryStack || "this account"}. I re-ranked ten use cases using your pain point and CXO outcome, then built a snake order for ${state.participants.length} stakeholders.`;
+        return `Plan ready for ${state.curatedIndustry ? industryLabel(state.curatedIndustry) : intake.industryStack || "this account"}. Each card includes a Gemini on Google Cloud build pattern — agents, grounding, and stack fit — then a snake order for ${state.participants.length} stakeholders.`;
       case "draft":
         return currentPicker
           ? `${currentPicker} — you're on the clock. Pick one use case; I'll flag duplicates and suggest trades if two owners want the same item.`

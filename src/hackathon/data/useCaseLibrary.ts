@@ -1,3 +1,5 @@
+import type { GeminiBlueprint } from "@/shared/gemini/geminiBlueprint";
+
 export interface UseCaseCandidate {
   id: string;
   title: string;
@@ -6,6 +8,7 @@ export interface UseCaseCandidate {
   feasibilityScore: number;
   riskScore: number;
   tags: string[];
+  geminiBlueprint?: GeminiBlueprint;
 }
 
 const retailCases: UseCaseCandidate[] = [

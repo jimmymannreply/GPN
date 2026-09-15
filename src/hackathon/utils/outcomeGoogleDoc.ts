@@ -84,6 +84,15 @@ function useCaseDetailTable(uc: UseCaseCandidate, owner: string, rank: number, c
 <tr><th>Risk</th><td>${uc.riskScore}</td></tr>
 <tr><th>Tags</th><td>${escapeHtml(uc.tags.join(", "))}</td></tr>
 </table>
+${
+  uc.geminiBlueprint
+    ? `<h2>Gemini on Google Cloud — solution pattern</h2>
+<p><strong>${escapeHtml(uc.geminiBlueprint.patternName)}</strong> (fit ${uc.geminiBlueprint.geminiFit})</p>
+<p>${escapeHtml(uc.geminiBlueprint.pitch)}</p>
+<p><em>Google stack:</em> ${escapeHtml(uc.geminiBlueprint.products.join(", "))}</p>
+<ol>${uc.geminiBlueprint.buildSteps.map((s) => `<li>${escapeHtml(s)}</li>`).join("")}</ol>`
+    : ""
+}
 <h2>Recommended next steps</h2>
 <ul>
 <li>90-day pilot scope workshop with ${escapeHtml(owner)} as business sponsor</li>

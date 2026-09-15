@@ -1,4 +1,5 @@
 import { compositeScore, type UseCaseCandidate } from "@/hackathon/data/useCaseLibrary";
+import { GeminiBlueprintPanel } from "@/shared/gemini/GeminiShowcase";
 
 export function UseCaseCard({
   useCase,
@@ -33,6 +34,11 @@ export function UseCaseCard({
           </span>
         ))}
       </div>
+      {useCase.geminiBlueprint && (
+        <div className="mt-3">
+          <GeminiBlueprintPanel blueprint={useCase.geminiBlueprint} compact />
+        </div>
+      )}
       <dl className="mt-3 grid grid-cols-3 gap-2 text-[10px] text-dl-text-secondary">
         <div>
           <dt className="font-medium">Value</dt>

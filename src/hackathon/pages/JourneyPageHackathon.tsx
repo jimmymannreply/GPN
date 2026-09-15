@@ -8,6 +8,7 @@ import { OutcomeDocDownloads } from "@/hackathon/components/OutcomeDocDownloads"
 import { UseCaseCard } from "@/hackathon/components/UseCaseCard";
 import { industryLabel } from "@/hackathon/data/useCaseLibrary";
 import { useHackathonDraft } from "@/hackathon/hooks/useHackathonDraft";
+import { GeminiFlowMini, GeminiStackRibbon } from "@/shared/gemini/GeminiShowcase";
 
 export function JourneyPageHackathon() {
   const {
@@ -65,6 +66,15 @@ export function JourneyPageHackathon() {
         <main className="mx-auto grid max-w-6xl gap-6 px-6 py-8 lg:grid-cols-[1fr_280px]">
           <div className="space-y-6">
             <PhaseStepper phase={state.phase} />
+            {state.phase !== "intake" && (
+              <GeminiStackRibbon
+                stackPhrase={
+                  state.intake.industryStack.split(/[·|]/).slice(1).join(" · ") ||
+                  state.intake.industryStack
+                }
+              />
+            )}
+            {state.phase !== "intake" && <GeminiFlowMini />}
             <AgentPanel message={agentMessage} accent={state.brandAccent} />
 
             {state.phase === "intake" && (
@@ -230,9 +240,15 @@ export function JourneyPageHackathon() {
                       className="flex gap-3 rounded-dl border border-dl-border bg-dl-page p-3 text-sm"
                     >
                       <span className="font-bold text-dl-brand">{i + 1}</span>
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <p className="font-medium">{item.useCase.title}</p>
                         <p className="text-xs text-dl-text-secondary">Owner: {item.owner}</p>
+                        {item.useCase.geminiBlueprint && (
+                          <p className="mt-1 text-[10px] text-[#1a73e8]">
+                            {item.useCase.geminiBlueprint.patternName} · fit{" "}
+                            {item.useCase.geminiBlueprint.geminiFit}
+                          </p>
+                        )}
                       </div>
                     </li>
                   ))}
