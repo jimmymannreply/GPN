@@ -26,7 +26,14 @@ jobs:
           cache: npm
 
       - run: npm ci
-      - run: npm run build:all
+      - name: Build all variants (base matches repo name for GitHub Pages)
+        run: |
+          BASE="/${GITHUB_REPOSITORY#*/}/"
+          npm run build --if-present
+          npx tsc -b
+          npx vite build --base "$BASE"
+          npx vite build --mode v2 --base "${BASE}v2/" --outDir dist/v2
+          npx vite build --mode v3 --base "${BASE}v3/" --outDir dist/v3
       - run: cp dist/index.html dist/404.html
       - run: cp dist/v2/index.html dist/v2/404.html
       - run: cp dist/v3/index.html dist/v3/404.html
