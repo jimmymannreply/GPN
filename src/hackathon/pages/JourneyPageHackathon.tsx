@@ -4,6 +4,7 @@ import { AgentPanel } from "@/hackathon/components/AgentPanel";
 import { GoogleSignInGate } from "@/hackathon/components/GoogleSignInGate";
 import { HandoffPanel } from "@/hackathon/components/HandoffPanel";
 import { PhaseStepper } from "@/hackathon/components/PhaseStepper";
+import { OutcomeDocDownloads } from "@/hackathon/components/OutcomeDocDownloads";
 import { UseCaseCard } from "@/hackathon/components/UseCaseCard";
 import { industryLabel } from "@/hackathon/data/useCaseLibrary";
 import { useHackathonDraft } from "@/hackathon/hooks/useHackathonDraft";
@@ -236,6 +237,7 @@ export function JourneyPageHackathon() {
                     </li>
                   ))}
                 </ol>
+                <OutcomeDocDownloads />
                 <button
                   type="button"
                   onClick={() => setHandoffAudience("partner")}
@@ -247,7 +249,12 @@ export function JourneyPageHackathon() {
               </section>
             )}
 
-            {state.phase === "handoff" && <HandoffPanel />}
+            {state.phase === "handoff" && (
+              <>
+                <OutcomeDocDownloads />
+                <HandoffPanel />
+              </>
+            )}
           </div>
 
           <aside className="space-y-4">

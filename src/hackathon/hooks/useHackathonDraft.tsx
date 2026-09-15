@@ -121,6 +121,7 @@ interface HackathonContextValue {
   setHandoffAudience: (audience: HandoffAudience) => void;
   submitDaf: () => void;
   resetHackathon: () => void;
+  recordOutcomeDownload: (kind: "shortlist" | "use-case", detail: string | number) => void;
   rankedShortlist: { useCase: UseCaseCandidate; owner: string; contested: boolean }[];
   currentPicker: string | null;
   availableCases: UseCaseCandidate[];
@@ -295,6 +296,20 @@ export function HackathonDraftProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(STORAGE_KEY);
   }, []);
 
+  const recordOutcomeDownload = useCallback((kind: "shortlist" | "use-case", detail: string | number) => {
+    setState((prev) => ({
+      ...prev,
+      telemetry: [
+        ...prev.telemetry,
+        {
+          event: `outcome.doc.${kind}`,
+          at: new Date().toISOString(),
+          detail: String(detail),
+        },
+      ].slice(-40),
+    }));
+  }, []);
+
   const rankedShortlist = useMemo(() => {
     const byId = new Map(state.pool.map((c) => [c.id, c]));
     return state.picks
@@ -333,7 +348,7 @@ export function HackathonDraftProvider({ children }: { children: ReactNode }) {
           ? `${currentPicker} — you're on the clock. Pick one use case; I'll flag duplicates and suggest trades if two owners want the same item.`
           : "Draft complete — moving to outcomes.";
       case "outcome":
-        return `Shortlist locked with named owners. ${state.picks.filter((p) => p.contested).length} picks were contested — good signal the room cared. Choose handoff audience next.`;
+        return `Shortlist locked with named owners. Download Google Docs briefs for each outcome, then continue to audience-aware handoff.`;
       case "handoff":
         return state.handoffAudience === "partner"
           ? "Partner path: submit the ranked shortlist, register the pilot, and apply for Deal Acceleration Funds (DAF)."
@@ -356,6 +371,7 @@ export function HackathonDraftProvider({ children }: { children: ReactNode }) {
     setHandoffAudience,
     submitDaf,
     resetHackathon,
+    recordOutcomeDownload,
     rankedShortlist,
     currentPicker,
     availableCases,
