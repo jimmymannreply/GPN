@@ -1,6 +1,9 @@
 import { type HackathonPhase } from "@/hackathon/hooks/useHackathonDraft";
 
-const STEPS: { id: HackathonPhase; label: string }[] = [
+/** Shared five-step spine; `run` is the Ghost Ledger live session (same slot as Use-Case Draft `draft`). */
+export type SpinePhase = HackathonPhase | "run";
+
+const STEPS: { id: SpinePhase; label: string }[] = [
   { id: "intake", label: "Intake" },
   { id: "plan", label: "Plan" },
   { id: "draft", label: "Run" },
@@ -8,16 +11,22 @@ const STEPS: { id: HackathonPhase; label: string }[] = [
   { id: "handoff", label: "Handoff" },
 ];
 
-const order: HackathonPhase[] = ["intake", "plan", "draft", "outcome", "handoff"];
+const order: SpinePhase[] = ["intake", "plan", "draft", "outcome", "handoff"];
 
-export function PhaseStepper({ phase }: { phase: HackathonPhase }) {
-  const activeIndex = order.indexOf(phase);
+function phaseIndex(phase: SpinePhase): number {
+  if (phase === "run") return 2;
+  return order.indexOf(phase);
+}
+
+export function PhaseStepper({ phase }: { phase: SpinePhase }) {
+  const activeIndex = phaseIndex(phase);
 
   return (
     <nav className="flex flex-wrap gap-2" aria-label="Hackathon progress">
       {STEPS.map((step, i) => {
         const done = i < activeIndex;
-        const active = step.id === phase;
+        const active =
+          step.id === phase || (step.id === "draft" && phase === "run");
         return (
           <span
             key={step.id}
