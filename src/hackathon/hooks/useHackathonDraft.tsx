@@ -10,12 +10,12 @@ import {
 import {
   buildSnakeOrder,
   industryLabel,
-  tailorUseCasePool,
   type IndustryKey,
   type UseCaseCandidate,
 } from "@/hackathon/data/useCaseLibrary";
+import { tailorUseCasePool } from "@/hackathon/data/intakeUseCaseGenerator";
 
-const STORAGE_KEY = "hackathon-use-case-draft-v1";
+const STORAGE_KEY = "hackathon-use-case-draft-v2";
 
 export type HackathonPhase = "intake" | "plan" | "draft" | "outcome" | "handoff";
 
@@ -50,6 +50,7 @@ export interface HackathonState {
   phase: HackathonPhase;
   intake: IntakeAnswers;
   curatedIndustry: IndustryKey | null;
+  curatedIndustryPhrase: string;
   pool: UseCaseCandidate[];
   participants: string[];
   snakeOrder: number[];
@@ -75,6 +76,7 @@ const initialState: HackathonState = {
   phase: "intake",
   intake: defaultIntake,
   curatedIndustry: null,
+  curatedIndustryPhrase: "",
   pool: [],
   participants: [],
   snakeOrder: [],
@@ -188,13 +190,14 @@ export function HackathonDraftProvider({ children }: { children: ReactNode }) {
 
   const completeIntake = useCallback(() => {
     setState((prev) => {
-      const { industry, pool } = tailorUseCasePool(prev.intake);
+      const { industry, industryPhrase, pool } = tailorUseCasePool(prev.intake);
       const participants = participantNames(prev.intake.headcount);
       const snakeOrder = buildDraftSnakeOrder(participants.length, pool.length);
       return {
         ...prev,
         phase: "plan",
         curatedIndustry: industry,
+        curatedIndustryPhrase: industryPhrase,
         pool,
         participants,
         snakeOrder,
@@ -217,6 +220,7 @@ export function HackathonDraftProvider({ children }: { children: ReactNode }) {
       ...prev,
       phase: "intake",
       curatedIndustry: null,
+      curatedIndustryPhrase: "",
       pool: [],
       participants: [],
       snakeOrder: [],

@@ -287,78 +287,28 @@ const healthcareCases: UseCaseCandidate[] = [
   },
 ];
 
-export type IndustryKey = "retail" | "manufacturing" | "healthcare";
+import { resolveVerticalFromIntake } from "@/hackathon/data/intakeUseCaseGenerator";
 
-const INDUSTRY_SIGNALS: Record<IndustryKey, string[]> = {
-  healthcare: [
-    "health",
-    "hospital",
-    "clinical",
-    "patient",
-    "payer",
-    "provider",
-    "medical",
-    "pharma",
-    "life science",
-    "hipaa",
-    "ehr",
-    "revenue cycle",
-  ],
-  manufacturing: [
-    "manuf",
-    "industrial",
-    "factory",
-    "plant",
-    "production",
-    "oee",
-    "assembly",
-    "supply chain",
-    "logistics",
-    "warehouse",
-    "automotive",
-    "aerospace",
-  ],
-  retail: [
-    "retail",
-    "store",
-    "commerce",
-    "ecommerce",
-    "e-commerce",
-    "sku",
-    "pos",
-    "merchandis",
-    "loyalty",
-    "shopper",
-    "grocery",
-    "hospitality",
-    "restaurant",
-    "cpg",
-    "consumer",
-  ],
-};
+export type IndustryKey =
+  | "retail"
+  | "manufacturing"
+  | "healthcare"
+  | "financial"
+  | "technology"
+  | "public_sector"
+  | "energy";
 
 export function resolveIndustryKey(
   industryStack: string,
   painPoint: string,
   cxoOutcome: string
 ): IndustryKey {
-  const blob = `${industryStack} ${painPoint} ${cxoOutcome}`.toLowerCase();
-  const scores: Record<IndustryKey, number> = {
-    retail: 0,
-    manufacturing: 0,
-    healthcare: 0,
-  };
-  for (const [key, signals] of Object.entries(INDUSTRY_SIGNALS) as [IndustryKey, string[]][]) {
-    for (const signal of signals) {
-      if (blob.includes(signal)) scores[key] += 1;
-    }
-  }
-  const best = (Object.entries(scores) as [IndustryKey, number][]).sort((a, b) => b[1] - a[1])[0];
-  if (best[1] > 0) return best[0];
-  const stack = industryStack.toLowerCase();
-  if (stack.includes("health")) return "healthcare";
-  if (stack.includes("manuf") || stack.includes("industrial")) return "manufacturing";
-  return "retail";
+  return resolveVerticalFromIntake({
+    customerName: "",
+    industryStack,
+    painPoint,
+    cxoOutcome,
+  });
 }
 
 export function industryLabel(key: IndustryKey): string {
@@ -366,6 +316,10 @@ export function industryLabel(key: IndustryKey): string {
     retail: "Retail & consumer",
     manufacturing: "Manufacturing & industrial",
     healthcare: "Healthcare & life sciences",
+    financial: "Financial services",
+    technology: "Technology & software",
+    public_sector: "Public sector & education",
+    energy: "Energy & utilities",
   };
   return labels[key];
 }
@@ -377,73 +331,11 @@ export function getIndustryCases(industry: string): UseCaseCandidate[] {
   return retailCases;
 }
 
-function tokenize(text: string): Set<string> {
-  const words = text.toLowerCase().match(/\b[a-z0-9]{3,}\b/g) ?? [];
-  return new Set(words);
-}
-
-function relevanceBoost(caseItem: UseCaseCandidate, painPoint: string, cxoOutcome: string): number {
-  const query = tokenize(`${painPoint} ${cxoOutcome}`);
-  if (query.size === 0) return 0;
-  const doc = tokenize(`${caseItem.title} ${caseItem.summary} ${caseItem.tags.join(" ")}`);
-  let overlap = 0;
-  for (const term of query) {
-    if (doc.has(term)) overlap += 10;
-    else {
-      for (const d of doc) {
-        if (d.includes(term) || term.includes(d)) {
-          overlap += 4;
-          break;
-        }
-      }
-    }
-  }
-  return overlap;
-}
-
 export interface IntakeTailoring {
   customerName: string;
   industryStack: string;
   painPoint: string;
   cxoOutcome: string;
-}
-
-/** Score, rank, and lightly personalize the draft board from full intake (not industry field alone). */
-export function tailorUseCasePool(intake: IntakeTailoring): {
-  industry: IndustryKey;
-  pool: UseCaseCandidate[];
-} {
-  const industry = resolveIndustryKey(
-    intake.industryStack,
-    intake.painPoint,
-    intake.cxoOutcome
-  );
-  const base =
-    industry === "healthcare"
-      ? healthcareCases
-      : industry === "manufacturing"
-        ? manufacturingCases
-        : retailCases;
-
-  const customer = intake.customerName.trim();
-  const painSnippet = intake.painPoint.trim().split(/[.!?]/)[0]?.slice(0, 80);
-
-  const ranked = [...base]
-    .map((c) => ({
-      case: c,
-      score: compositeScore(c) + relevanceBoost(c, intake.painPoint, intake.cxoOutcome),
-    }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 10)
-    .map(({ case: c }, index) => {
-      if (!customer || index > 2) return c;
-      const tail = painSnippet
-        ? ` Tailored for ${customer} — aligned to “${painSnippet}”.`
-        : ` Tailored for ${customer} from your intake.`;
-      return { ...c, summary: `${c.summary}${tail}` };
-    });
-
-  return { industry, pool: ranked };
 }
 
 export function compositeScore(c: UseCaseCandidate): number {

@@ -90,7 +90,7 @@ export function JourneyPageHackathon() {
                       className="mt-1 w-full rounded-dl border border-dl-border px-3 py-2 text-sm"
                       value={state.intake.industryStack}
                       onChange={(e) => updateIntake({ industryStack: e.target.value })}
-                      placeholder="Retail · M365 + Salesforce"
+                      placeholder="Financial Services · M365 + Google Cloud"
                     />
                   </label>
                   <label className="block text-sm sm:col-span-2">
@@ -144,8 +144,8 @@ export function JourneyPageHackathon() {
                   <h2 className="text-lg font-semibold">Plan generation</h2>
                   {state.curatedIndustry && (
                     <p className="mt-2 text-xs font-medium text-dl-brand">
-                      Curated vertical: {industryLabel(state.curatedIndustry)} — ranked from your
-                      pain point &amp; CXO outcome
+                      {state.curatedIndustryPhrase} · {industryLabel(state.curatedIndustry)} —
+                      use cases generated from your pain, outcome, and stack
                     </p>
                   )}
                   <p className="mt-1 text-sm text-dl-text-secondary">
