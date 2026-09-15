@@ -9,8 +9,9 @@ import {
 } from "react";
 import {
   buildSnakeOrder,
-  getIndustryCases,
-  rankCases,
+  industryLabel,
+  tailorUseCasePool,
+  type IndustryKey,
   type UseCaseCandidate,
 } from "@/hackathon/data/useCaseLibrary";
 
@@ -48,6 +49,7 @@ export interface HackathonState {
   brandAccent: string;
   phase: HackathonPhase;
   intake: IntakeAnswers;
+  curatedIndustry: IndustryKey | null;
   pool: UseCaseCandidate[];
   participants: string[];
   snakeOrder: number[];
@@ -72,6 +74,7 @@ const initialState: HackathonState = {
   brandAccent: "#0078D4",
   phase: "intake",
   intake: defaultIntake,
+  curatedIndustry: null,
   pool: [],
   participants: [],
   snakeOrder: [],
@@ -109,6 +112,7 @@ interface HackathonContextValue {
   setBrand: (name: string, accent?: string) => void;
   updateIntake: (patch: Partial<IntakeAnswers>) => void;
   completeIntake: () => void;
+  returnToIntake: () => void;
   startDraft: () => void;
   pickUseCase: (useCaseId: string) => void;
   advanceToOutcome: () => void;
@@ -184,12 +188,13 @@ export function HackathonDraftProvider({ children }: { children: ReactNode }) {
 
   const completeIntake = useCallback(() => {
     setState((prev) => {
-      const pool = rankCases(getIndustryCases(prev.intake.industryStack)).slice(0, 10);
+      const { industry, pool } = tailorUseCasePool(prev.intake);
       const participants = participantNames(prev.intake.headcount);
       const snakeOrder = buildDraftSnakeOrder(participants.length, pool.length);
       return {
         ...prev,
         phase: "plan",
+        curatedIndustry: industry,
         pool,
         participants,
         snakeOrder,
@@ -200,11 +205,25 @@ export function HackathonDraftProvider({ children }: { children: ReactNode }) {
           {
             event: "intake.complete",
             at: new Date().toISOString(),
-            detail: prev.intake.customerName,
+            detail: `${prev.intake.customerName} · ${industryLabel(industry)}`,
           },
         ].slice(-40),
       };
     });
+  }, []);
+
+  const returnToIntake = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      phase: "intake",
+      curatedIndustry: null,
+      pool: [],
+      participants: [],
+      snakeOrder: [],
+      draftIndex: 0,
+      picks: [],
+      dafSubmitted: false,
+    }));
   }, []);
 
   const startDraft = useCallback(() => {
@@ -304,7 +323,7 @@ export function HackathonDraftProvider({ children }: { children: ReactNode }) {
       case "intake":
         return `Welcome — I'm your ${brandName} hackathon agent. We'll scope a 90‑minute Use‑Case Draft for ${intake.customerName || "your customer"}: three intake questions plus headcount, then a live snake draft.`;
       case "plan":
-        return `Plan ready. I scored ten use cases for ${intake.industryStack || "this industry"} and built a snake order for ${state.participants.length} stakeholders. Review the board, then enter the live draft.`;
+        return `Plan ready for ${state.curatedIndustry ? industryLabel(state.curatedIndustry) : intake.industryStack || "this account"}. I re-ranked ten use cases using your pain point and CXO outcome, then built a snake order for ${state.participants.length} stakeholders.`;
       case "draft":
         return currentPicker
           ? `${currentPicker} — you're on the clock. Pick one use case; I'll flag duplicates and suggest trades if two owners want the same item.`
@@ -326,6 +345,7 @@ export function HackathonDraftProvider({ children }: { children: ReactNode }) {
     setBrand,
     updateIntake,
     completeIntake,
+    returnToIntake,
     startDraft,
     pickUseCase,
     advanceToOutcome,

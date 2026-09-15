@@ -5,6 +5,7 @@ import { GoogleSignInGate } from "@/hackathon/components/GoogleSignInGate";
 import { HandoffPanel } from "@/hackathon/components/HandoffPanel";
 import { PhaseStepper } from "@/hackathon/components/PhaseStepper";
 import { UseCaseCard } from "@/hackathon/components/UseCaseCard";
+import { industryLabel } from "@/hackathon/data/useCaseLibrary";
 import { useHackathonDraft } from "@/hackathon/hooks/useHackathonDraft";
 
 export function JourneyPageHackathon() {
@@ -12,6 +13,7 @@ export function JourneyPageHackathon() {
     state,
     updateIntake,
     completeIntake,
+    returnToIntake,
     startDraft,
     pickUseCase,
     setHandoffAudience,
@@ -140,10 +142,23 @@ export function JourneyPageHackathon() {
               <section className="space-y-4">
                 <div className="rounded-dl border border-dl-border bg-dl-surface p-4 shadow-card">
                   <h2 className="text-lg font-semibold">Plan generation</h2>
+                  {state.curatedIndustry && (
+                    <p className="mt-2 text-xs font-medium text-dl-brand">
+                      Curated vertical: {industryLabel(state.curatedIndustry)} — ranked from your
+                      pain point &amp; CXO outcome
+                    </p>
+                  )}
                   <p className="mt-1 text-sm text-dl-text-secondary">
                     Ten pre-scored use cases · snake order for {state.participants.length}{" "}
                     participants · {state.snakeOrder.length} picks
                   </p>
+                  <button
+                    type="button"
+                    onClick={returnToIntake}
+                    className="mt-3 text-xs font-medium text-dl-brand underline"
+                  >
+                    Edit intake &amp; regenerate board
+                  </button>
                   <p className="mt-2 text-xs text-dl-text-secondary">
                     Order: {state.participants.join(" → ")} (snake reverses each round)
                   </p>
