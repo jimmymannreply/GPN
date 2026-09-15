@@ -6,7 +6,9 @@ export interface GeminiBlueprint {
   geminiFit: number;
 }
 
-const PATTERNS: { match: RegExp; blueprint: Omit<GeminiBlueprint, "pitch"> & { pitchTpl: string } }[] = [
+type PatternDef = Omit<GeminiBlueprint, "pitch"> & { pitchTpl: string; match: RegExp };
+
+const PATTERNS: PatternDef[] = [
   {
     match: /support|contact|cx|frontline|intake|access|citizen/i,
     patternName: "Gemini Enterprise agent + Workspace",
