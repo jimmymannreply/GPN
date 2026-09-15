@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
-import { useHackathonDraft } from "@/hackathon/hooks/useHackathonDraft";
+import { useGhostLedger } from "@/ghost-ledger/hooks/useGhostLedger";
 
-const journeyPath = "/hackathon/journey";
+const journeyPath = "/hackathon/ghost-ledger/journey";
 
 const BRAND_PRESETS = [
   { name: "Softchoice", accent: "#0078D4" },
@@ -9,8 +9,8 @@ const BRAND_PRESETS = [
   { name: "SoftwareOne", accent: "#6B2C91" },
 ];
 
-export function LandingPageHackathon() {
-  const { setBrand, state } = useHackathonDraft();
+export function LandingPageGhostLedger() {
+  const { setBrand, state } = useGhostLedger();
 
   return (
     <div className="min-h-screen bg-dl-page text-dl-text">
@@ -20,28 +20,23 @@ export function LandingPageHackathon() {
             <p className="text-xs font-semibold uppercase tracking-wider text-dl-text-secondary">
               Stage-fit hackathons
             </p>
-            <p className="text-lg font-semibold">Use-Case Draft · Concept 2</p>
+            <p className="text-lg font-semibold">The Ghost Ledger · Concept 4</p>
           </div>
-          <div className="flex gap-3 text-sm">
-            <Link to="/hackathon/ghost-ledger" className="text-dl-brand hover:underline">
-              Ghost Ledger
-            </Link>
-            <Link to="/v3" className="text-dl-brand hover:underline">
-              Partner Story V3
-            </Link>
-          </div>
+          <Link to="/hackathon" className="text-sm text-dl-brand hover:underline">
+            Use-Case Draft
+          </Link>
         </div>
       </header>
 
       <main className="mx-auto max-w-3xl px-6 py-16">
         <div className="rounded-dl border border-dl-border bg-dl-surface p-8 shadow-card">
           <h1 className="text-3xl font-semibold leading-tight">
-            Turn an open brainstorm into a forced, prioritized commitment.
+            Loss aversion, not gain framing — watch money leave in real time.
           </h1>
           <p className="mt-4 text-dl-text-secondary">
-            Agent-guided, virtual-first hackathon for partner pre-sales — intake, scored draft board,
-            live snake draft, owned shortlist, and audience-aware handoff with DAF at the partner
-            seam.
+            CXO-facing, 90-minute remote session. Real customer numbers drive a live cost-of-inaction
+            ledger; the room freezes the counter by committing to a pilot use case, then hands off
+            with DAF on the partner path.
           </p>
 
           <div className="mt-8">
@@ -69,19 +64,14 @@ export function LandingPageHackathon() {
             </div>
           </div>
 
-          <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <Link
-              to={journeyPath}
-              data-testid="hackathon-start"
-              className="inline-flex rounded-dl px-8 py-3 text-sm font-semibold text-white shadow-card"
-              style={{ backgroundColor: state.brandAccent }}
-            >
-              Start Use-Case Draft
-            </Link>
-          </div>
-          <p className="mt-6 text-center text-xs text-dl-text-secondary">
-            You focus on your customers — Co-sell, Services, and Technology run through one engine.
-          </p>
+          <Link
+            to={journeyPath}
+            data-testid="ghost-ledger-start"
+            className="mt-10 inline-flex rounded-dl px-8 py-3 text-sm font-semibold text-white shadow-card"
+            style={{ backgroundColor: state.brandAccent }}
+          >
+            Start Ghost Ledger
+          </Link>
         </div>
       </main>
     </div>

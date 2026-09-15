@@ -16,6 +16,9 @@ import { SubmissionsQueuePageV3 } from "@/v3/pages/SubmissionsQueuePageV3";
 import { HackathonDraftProvider } from "@/hackathon/hooks/useHackathonDraft";
 import { LandingPageHackathon } from "@/hackathon/pages/LandingPageHackathon";
 import { JourneyPageHackathon } from "@/hackathon/pages/JourneyPageHackathon";
+import { GhostLedgerProvider } from "@/ghost-ledger/hooks/useGhostLedger";
+import { LandingPageGhostLedger } from "@/ghost-ledger/pages/LandingPageGhostLedger";
+import { JourneyPageGhostLedger } from "@/ghost-ledger/pages/JourneyPageGhostLedger";
 
 const basename =
   import.meta.env.BASE_URL === "/" ? undefined : import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -84,6 +87,16 @@ export default function App() {
           >
             <Route path="/hackathon" element={<LandingPageHackathon />} />
             <Route path="/hackathon/journey" element={<JourneyPageHackathon />} />
+          </Route>
+          <Route
+            element={
+              <GhostLedgerProvider>
+                <Outlet />
+              </GhostLedgerProvider>
+            }
+          >
+            <Route path="/hackathon/ghost-ledger" element={<LandingPageGhostLedger />} />
+            <Route path="/hackathon/ghost-ledger/journey" element={<JourneyPageGhostLedger />} />
           </Route>
         </Routes>
       </BrowserRouter>
