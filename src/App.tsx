@@ -13,6 +13,9 @@ import { JourneyV3Provider } from "@/v3/hooks/useJourneyV3";
 import { LandingPageV3 } from "@/v3/pages/LandingPageV3";
 import { JourneyPageV3 } from "@/v3/pages/JourneyPageV3";
 import { SubmissionsQueuePageV3 } from "@/v3/pages/SubmissionsQueuePageV3";
+import { HackathonDraftProvider } from "@/hackathon/hooks/useHackathonDraft";
+import { LandingPageHackathon } from "@/hackathon/pages/LandingPageHackathon";
+import { JourneyPageHackathon } from "@/hackathon/pages/JourneyPageHackathon";
 
 const basename =
   import.meta.env.BASE_URL === "/" ? undefined : import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -71,6 +74,16 @@ export default function App() {
             <Route path={v3Base} element={<LandingPageV3 />} />
             <Route path={v3Journey} element={<JourneyPageV3 />} />
             <Route path={v3Submissions} element={<SubmissionsQueuePageV3 />} />
+          </Route>
+          <Route
+            element={
+              <HackathonDraftProvider>
+                <Outlet />
+              </HackathonDraftProvider>
+            }
+          >
+            <Route path="/hackathon" element={<LandingPageHackathon />} />
+            <Route path="/hackathon/journey" element={<JourneyPageHackathon />} />
           </Route>
         </Routes>
       </BrowserRouter>

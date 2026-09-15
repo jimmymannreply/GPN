@@ -17,3 +17,13 @@ interface Window {
   SpeechRecognition: new () => SpeechRecognition;
   webkitSpeechRecognition: new () => SpeechRecognition;
 }
+
+interface ImportMetaEnv {
+  readonly VITE_GOOGLE_CLIENT_ID?: string;
+  readonly VITE_V2_STANDALONE?: string;
+  readonly VITE_V3_STANDALONE?: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}

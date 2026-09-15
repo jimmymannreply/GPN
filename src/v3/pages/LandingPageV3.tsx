@@ -13,7 +13,10 @@ export function LandingPageV3() {
         <div className="mx-auto flex max-w-5xl items-center justify-between">
           <p className="font-serif text-lg">Partner Story Interview V3</p>
           {!v3Standalone && (
-            <Link to="/v2" className="text-sm text-me-ice hover:underline">View V2 demo</Link>
+            <div className="flex gap-3 text-sm">
+              <Link to="/hackathon" className="text-me-ice hover:underline">Hackathon POC</Link>
+              <Link to="/v2" className="text-me-ice hover:underline">View V2 demo</Link>
+            </div>
           )}
         </div>
       </header>
