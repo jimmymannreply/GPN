@@ -345,7 +345,7 @@ export function HackathonDraftProvider({ children }: { children: ReactNode }) {
       case "intake":
         return `Let's scope this Use-Case Draft conversationally — answer in the chat below and I'll build your Gemini-ready board.`;
       case "plan":
-        return `Plan ready for ${state.curatedIndustry ? industryLabel(state.curatedIndustry) : intake.industryStack || "this account"}. Each card includes a Gemini on Google Cloud build pattern — agents, grounding, and stack fit — then a snake order for ${state.participants.length} stakeholders.`;
+        return `Plan ready for ${state.curatedIndustry ? industryLabel(state.curatedIndustry) : state.intake.industryStack || "this account"}. Each card includes a Gemini on Google Cloud build pattern — agents, grounding, and stack fit — then a snake order for ${state.participants.length} stakeholders.`;
       case "draft":
         return currentPicker
           ? `${currentPicker} — you're on the clock. Pick one use case; I'll flag duplicates and suggest trades if two owners want the same item.`
