@@ -58,6 +58,7 @@ export interface HackathonState {
   picks: DraftPick[];
   handoffAudience: HandoffAudience;
   dafSubmitted: boolean;
+  intakeSessionKey: number;
   telemetry: { event: string; at: string; detail?: string }[];
 }
 
@@ -84,6 +85,7 @@ const initialState: HackathonState = {
   picks: [],
   handoffAudience: "partner",
   dafSubmitted: false,
+  intakeSessionKey: 0,
   telemetry: [],
 };
 
@@ -228,6 +230,7 @@ export function HackathonDraftProvider({ children }: { children: ReactNode }) {
       draftIndex: 0,
       picks: [],
       dafSubmitted: false,
+      intakeSessionKey: prev.intakeSessionKey + 1,
     }));
   }, []);
 
@@ -292,7 +295,7 @@ export function HackathonDraftProvider({ children }: { children: ReactNode }) {
   }, [logTelemetry]);
 
   const resetHackathon = useCallback(() => {
-    setState({ ...initialState });
+    setState({ ...initialState, intakeSessionKey: Date.now() });
     localStorage.removeItem(STORAGE_KEY);
   }, []);
 
@@ -337,10 +340,10 @@ export function HackathonDraftProvider({ children }: { children: ReactNode }) {
   );
 
   const agentMessage = useMemo(() => {
-    const { phase, intake, brandName } = state;
+    const { phase } = state;
     switch (phase) {
       case "intake":
-        return `Welcome — I'm your ${brandName} hackathon agent. We'll scope a 90‑minute Use‑Case Draft for ${intake.customerName || "your customer"}: three intake questions plus headcount, then a live snake draft.`;
+        return `Let's scope this Use-Case Draft conversationally — answer in the chat below and I'll build your Gemini-ready board.`;
       case "plan":
         return `Plan ready for ${state.curatedIndustry ? industryLabel(state.curatedIndustry) : intake.industryStack || "this account"}. Each card includes a Gemini on Google Cloud build pattern — agents, grounding, and stack fit — then a snake order for ${state.participants.length} stakeholders.`;
       case "draft":

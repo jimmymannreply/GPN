@@ -44,6 +44,7 @@ export interface GhostState {
   committedMonthlySavings: number;
   handoffAudience: HandoffAudience;
   dafSubmitted: boolean;
+  intakeSessionKey: number;
   telemetry: { event: string; at: string; detail?: string }[];
 }
 
@@ -75,6 +76,7 @@ const initialState: GhostState = {
   committedMonthlySavings: 0,
   handoffAudience: "partner",
   dafSubmitted: false,
+  intakeSessionKey: 0,
   telemetry: [],
 };
 
@@ -186,6 +188,7 @@ export function GhostLedgerProvider({ children }: { children: ReactNode }) {
       selectedFreezeId: null,
       committedMonthlySavings: 0,
       dafSubmitted: false,
+      intakeSessionKey: prev.intakeSessionKey + 1,
     }));
   }, []);
 
@@ -254,7 +257,7 @@ export function GhostLedgerProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const resetSession = useCallback(() => {
-    setState({ ...initialState });
+    setState({ ...initialState, intakeSessionKey: Date.now() });
     localStorage.removeItem(STORAGE_KEY);
   }, []);
 
@@ -264,10 +267,10 @@ export function GhostLedgerProvider({ children }: { children: ReactNode }) {
   }, [state.breakdown, state.elapsedSeconds]);
 
   const agentMessage = useMemo(() => {
-    const { phase, intake, breakdown, frozen } = state;
+    const { phase, breakdown, frozen } = state;
     switch (phase) {
       case "intake":
-        return `I'm your ${state.brandName} Ghost Ledger agent. We'll use ${intake.customerName || "your customer"}'s real numbers — tool spend, tickets, manual hours, and churn — not benchmarks.`;
+        return `Answer the agent in the chat — real spend, volume, and churn numbers only. Then we'll start the live ledger.`;
       case "plan":
         return breakdown
           ? `Cost-of-inaction model ready: ${breakdown.monthlyTotal.toFixed(0)} per month walking out the door. In Run, the ledger ticks live while the room debates.`

@@ -39,7 +39,7 @@ export function LandingPageHackathon() {
             Turn an open brainstorm into a forced, prioritized commitment.
           </h1>
           <p className="mt-4 text-dl-text-secondary">
-            Agent-guided, virtual-first hackathon for partner pre-sales — each drafted use case ships
+            Conversational, agent-guided hackathon for partner pre-sales — each drafted use case ships
             with a <strong>Gemini on Google Cloud</strong> blueprint (agents, grounding, pilot path)
             plus audience-aware handoff with DAF at the partner seam.
           </p>

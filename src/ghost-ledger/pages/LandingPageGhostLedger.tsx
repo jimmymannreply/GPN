@@ -34,7 +34,7 @@ export function LandingPageGhostLedger() {
             Loss aversion, not gain framing — watch money leave in real time.
           </h1>
           <p className="mt-4 text-dl-text-secondary">
-            CXO-facing, 90-minute remote session. Real numbers drive a live cost-of-inaction ledger;
+            CXO-facing, 90-minute remote session. Talk through real numbers with the agent, then watch a live cost-of-inaction ledger;
             freezing the counter commits to a <strong>Gemini-powered</strong> reversal play on Google
             Cloud, then hands off with DAF on the partner path.
           </p>

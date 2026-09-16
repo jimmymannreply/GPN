@@ -9,6 +9,9 @@ import { UseCaseCard } from "@/hackathon/components/UseCaseCard";
 import { industryLabel } from "@/hackathon/data/useCaseLibrary";
 import { useHackathonDraft } from "@/hackathon/hooks/useHackathonDraft";
 import { GeminiFlowMini, GeminiStackRibbon } from "@/shared/gemini/GeminiShowcase";
+import { ConversationalIntake } from "@/shared/conversational/ConversationalIntake";
+import { DRAFT_INTAKE_OPENING, draftIntakeSteps } from "@/hackathon/data/draftIntakeSteps";
+import type { IntakeAnswers } from "@/hackathon/hooks/useHackathonDraft";
 
 export function JourneyPageHackathon() {
   const {
@@ -27,12 +30,9 @@ export function JourneyPageHackathon() {
     resetHackathon,
   } = useHackathonDraft();
 
-  const intakeValid =
-    state.intake.customerName.trim() &&
-    state.intake.industryStack.trim() &&
-    state.intake.painPoint.trim() &&
-    state.intake.cxoOutcome.trim() &&
-    state.intake.headcount >= 4;
+  const applyIntakeField = (stepId: string, value: unknown) => {
+    updateIntake({ [stepId]: value } as Partial<IntakeAnswers>);
+  };
 
   return (
     <GoogleSignInGate>
@@ -78,75 +78,14 @@ export function JourneyPageHackathon() {
             <AgentPanel message={agentMessage} accent={state.brandAccent} />
 
             {state.phase === "intake" && (
-              <section className="rounded-dl border border-dl-border bg-dl-surface p-6 shadow-card">
-                <h2 className="text-lg font-semibold">Intake &amp; scoping</h2>
-                <p className="mt-1 text-sm text-dl-text-secondary">
-                  Three questions plus headcount — same spine as Business Value Sprint, sized for the
-                  draft board.
-                </p>
-                <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                  <label className="block text-sm sm:col-span-2">
-                    <span className="font-medium">Customer</span>
-                    <input
-                      className="mt-1 w-full rounded-dl border border-dl-border px-3 py-2 text-sm"
-                      value={state.intake.customerName}
-                      onChange={(e) => updateIntake({ customerName: e.target.value })}
-                      placeholder="Northwind Retail Group"
-                      data-testid="intake-customer"
-                    />
-                  </label>
-                  <label className="block text-sm sm:col-span-2">
-                    <span className="font-medium">Industry &amp; stack</span>
-                    <input
-                      className="mt-1 w-full rounded-dl border border-dl-border px-3 py-2 text-sm"
-                      value={state.intake.industryStack}
-                      onChange={(e) => updateIntake({ industryStack: e.target.value })}
-                      placeholder="Financial Services · M365 + Google Cloud"
-                    />
-                  </label>
-                  <label className="block text-sm sm:col-span-2">
-                    <span className="font-medium">Pain that booked the meeting</span>
-                    <textarea
-                      className="mt-1 w-full rounded-dl border border-dl-border px-3 py-2 text-sm"
-                      rows={2}
-                      value={state.intake.painPoint}
-                      onChange={(e) => updateIntake({ painPoint: e.target.value })}
-                      placeholder="Store associates can't get trusted answers at the register."
-                    />
-                  </label>
-                  <label className="block text-sm sm:col-span-2">
-                    <span className="font-medium">CXO outcome being chased</span>
-                    <input
-                      className="mt-1 w-full rounded-dl border border-dl-border px-3 py-2 text-sm"
-                      value={state.intake.cxoOutcome}
-                      onChange={(e) => updateIntake({ cxoOutcome: e.target.value })}
-                      placeholder="Lift same-store sales 3% without adding labor hours"
-                    />
-                  </label>
-                  <label className="block text-sm">
-                    <span className="font-medium">Headcount (4–8)</span>
-                    <input
-                      type="number"
-                      min={4}
-                      max={8}
-                      className="mt-1 w-full rounded-dl border border-dl-border px-3 py-2 text-sm"
-                      value={state.intake.headcount}
-                      onChange={(e) =>
-                        updateIntake({ headcount: Number(e.target.value) || 6 })
-                      }
-                    />
-                  </label>
-                </div>
-                <button
-                  type="button"
-                  disabled={!intakeValid}
-                  onClick={completeIntake}
-                  data-testid="intake-continue"
-                  className="mt-6 rounded-dl bg-dl-brand px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
-                >
-                  Generate draft plan
-                </button>
-              </section>
+              <ConversationalIntake
+                sessionKey={state.intakeSessionKey}
+                steps={draftIntakeSteps}
+                openingLine={DRAFT_INTAKE_OPENING}
+                accent={state.brandAccent}
+                onApply={applyIntakeField}
+                onComplete={completeIntake}
+              />
             )}
 
             {state.phase === "plan" && (

@@ -8,17 +8,17 @@ import { GoogleSignInGateGhost } from "@/ghost-ledger/components/GoogleSignInGat
 import { TickingLedger } from "@/ghost-ledger/components/TickingLedger";
 import { useGhostLedger } from "@/ghost-ledger/hooks/useGhostLedger";
 import { GeminiBlueprintPanel, GeminiFlowMini, GeminiStackRibbon } from "@/shared/gemini/GeminiShowcase";
+import { ConversationalIntake } from "@/shared/conversational/ConversationalIntake";
+import { LEDGER_INTAKE_OPENING, ledgerIntakeSteps } from "@/ghost-ledger/data/ledgerIntakeSteps";
+import type { LedgerIntake } from "@/ghost-ledger/data/costModel";
 
 export function JourneyPageGhostLedger() {
   const gl = useGhostLedger();
   const { state, agentMessage, liveLossUsd } = gl;
 
-  const intakeValid =
-    state.intake.customerName.trim() &&
-    state.intake.industryStack.trim() &&
-    state.intake.monthlyToolSpend > 0 &&
-    state.intake.ticketsPerMonth > 0 &&
-    state.intake.hoursLostPerWeek > 0;
+  const applyIntakeField = (stepId: string, value: unknown) => {
+    gl.updateIntake({ [stepId]: value } as Partial<LedgerIntake>);
+  };
 
   return (
     <GoogleSignInGateGhost>
@@ -64,112 +64,14 @@ export function JourneyPageGhostLedger() {
             <AgentPanel message={agentMessage} accent={state.brandAccent} />
 
             {state.phase === "intake" && (
-              <section className="rounded-dl border border-dl-border bg-dl-surface p-6 shadow-card">
-                <h2 className="text-lg font-semibold">Intake — real numbers</h2>
-                <p className="mt-1 text-sm text-dl-text-secondary">
-                  Tool spend, ticket volume, manual hours, and churn — not benchmark placeholders.
-                </p>
-                <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                  <label className="block text-sm sm:col-span-2">
-                    <span className="font-medium">Customer</span>
-                    <input
-                      className="mt-1 w-full rounded-dl border border-dl-border px-3 py-2 text-sm"
-                      value={state.intake.customerName}
-                      onChange={(e) => gl.updateIntake({ customerName: e.target.value })}
-                      placeholder="Contoso Financial"
-                    />
-                  </label>
-                  <label className="block text-sm sm:col-span-2">
-                    <span className="font-medium">Industry &amp; stack</span>
-                    <input
-                      className="mt-1 w-full rounded-dl border border-dl-border px-3 py-2 text-sm"
-                      value={state.intake.industryStack}
-                      onChange={(e) => gl.updateIntake({ industryStack: e.target.value })}
-                      placeholder="Financial Services · M365 + ServiceNow"
-                    />
-                  </label>
-                  <label className="block text-sm">
-                    <span className="font-medium">Monthly tool spend (USD)</span>
-                    <input
-                      type="number"
-                      min={0}
-                      className="mt-1 w-full rounded-dl border border-dl-border px-3 py-2 text-sm"
-                      value={state.intake.monthlyToolSpend || ""}
-                      onChange={(e) =>
-                        gl.updateIntake({ monthlyToolSpend: Number(e.target.value) || 0 })
-                      }
-                    />
-                  </label>
-                  <label className="block text-sm">
-                    <span className="font-medium">Support tickets / month</span>
-                    <input
-                      type="number"
-                      min={0}
-                      className="mt-1 w-full rounded-dl border border-dl-border px-3 py-2 text-sm"
-                      value={state.intake.ticketsPerMonth || ""}
-                      onChange={(e) =>
-                        gl.updateIntake({ ticketsPerMonth: Number(e.target.value) || 0 })
-                      }
-                    />
-                  </label>
-                  <label className="block text-sm">
-                    <span className="font-medium">Avg minutes per ticket</span>
-                    <input
-                      type="number"
-                      min={1}
-                      className="mt-1 w-full rounded-dl border border-dl-border px-3 py-2 text-sm"
-                      value={state.intake.minutesPerTicket}
-                      onChange={(e) =>
-                        gl.updateIntake({ minutesPerTicket: Number(e.target.value) || 12 })
-                      }
-                    />
-                  </label>
-                  <label className="block text-sm">
-                    <span className="font-medium">Hours lost to manual work / week</span>
-                    <input
-                      type="number"
-                      min={0}
-                      className="mt-1 w-full rounded-dl border border-dl-border px-3 py-2 text-sm"
-                      value={state.intake.hoursLostPerWeek || ""}
-                      onChange={(e) =>
-                        gl.updateIntake({ hoursLostPerWeek: Number(e.target.value) || 0 })
-                      }
-                    />
-                  </label>
-                  <label className="block text-sm">
-                    <span className="font-medium">Loaded hourly cost (USD)</span>
-                    <input
-                      type="number"
-                      min={1}
-                      className="mt-1 w-full rounded-dl border border-dl-border px-3 py-2 text-sm"
-                      value={state.intake.hourlyLoadedCost}
-                      onChange={(e) =>
-                        gl.updateIntake({ hourlyLoadedCost: Number(e.target.value) || 85 })
-                      }
-                    />
-                  </label>
-                  <label className="block text-sm">
-                    <span className="font-medium">Monthly churn revenue at risk (USD)</span>
-                    <input
-                      type="number"
-                      min={0}
-                      className="mt-1 w-full rounded-dl border border-dl-border px-3 py-2 text-sm"
-                      value={state.intake.monthlyChurnRevenue || ""}
-                      onChange={(e) =>
-                        gl.updateIntake({ monthlyChurnRevenue: Number(e.target.value) || 0 })
-                      }
-                    />
-                  </label>
-                </div>
-                <button
-                  type="button"
-                  disabled={!intakeValid}
-                  onClick={gl.completeIntake}
-                  className="mt-6 rounded-dl bg-dl-brand px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
-                >
-                  Build cost-of-inaction model
-                </button>
-              </section>
+              <ConversationalIntake
+                sessionKey={state.intakeSessionKey}
+                steps={ledgerIntakeSteps}
+                openingLine={LEDGER_INTAKE_OPENING}
+                accent={state.brandAccent}
+                onApply={applyIntakeField}
+                onComplete={gl.completeIntake}
+              />
             )}
 
             {state.phase === "plan" && state.breakdown && (
