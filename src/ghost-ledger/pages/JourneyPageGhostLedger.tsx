@@ -48,7 +48,14 @@ export function JourneyPageGhostLedger({ customerMode = false }: { customerMode?
                   {state.user.name}
                 </span>
               )}
-              <button type="button" onClick={gl.resetSession} className="text-xs text-dl-brand underline">
+              <button
+                type="button"
+                onClick={() => {
+                  gl.resetSession();
+                  if (customerMode) gl.setBrand("Google Cloud", "#1a73e8");
+                }}
+                className="text-xs text-dl-brand underline"
+              >
                 Reset
               </button>
               <Link

@@ -63,7 +63,14 @@ export function JourneyPageHackathon({ customerMode = false }: { customerMode?: 
                   {state.user.name}
                 </span>
               )}
-              <button type="button" onClick={resetHackathon} className="text-xs text-dl-brand underline">
+              <button
+                type="button"
+                onClick={() => {
+                  resetHackathon();
+                  if (customerMode) setBrand("Google Cloud", "#1a73e8");
+                }}
+                className="text-xs text-dl-brand underline"
+              >
                 Reset
               </button>
               <Link
