@@ -1,13 +1,10 @@
 import type { ConversationalStep } from "@/shared/conversational/ConversationalIntake";
-import {
-  parseHeadcount,
-  parsePlainText,
-} from "@/shared/conversational/parseIntakeReply";
+import { parsePlainText } from "@/shared/conversational/parseIntakeReply";
 
 export const DRAFT_INTAKE_OPENING =
   "I'm running your first Use-Case Draft — tell me about the account in your own words. I'll ask a few follow-ups, then build the board.";
 
-export const draftIntakeSteps: ConversationalStep[] = [
+export const draftPrefixSteps: ConversationalStep[] = [
   {
     id: "customerName",
     prompt: "Who's the customer we're running this hackathon for?",
@@ -34,13 +31,9 @@ export const draftIntakeSteps: ConversationalStep[] = [
     placeholder: "Lift same-store sales 3% without adding labor hours",
     parse: parsePlainText,
   },
-  {
-    id: "headcount",
-    prompt: "How many people in the session — including at least one CXO? (4–8)",
-    placeholder: "6",
-    parse: (raw) => {
-      const r = parseHeadcount(raw);
-      return { valid: r.valid, value: r.value, error: r.error };
-    },
-  },
 ];
+
+export const DRAFT_HEADCOUNT_PROMPT =
+  "How many people in the session — including at least one CXO? (4–8)";
+
+export const draftSuffixSteps: ConversationalStep[] = [];

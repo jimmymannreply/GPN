@@ -14,6 +14,7 @@ import {
   type UseCaseCandidate,
 } from "@/hackathon/data/useCaseLibrary";
 import { tailorUseCasePool } from "@/hackathon/data/intakeUseCaseGenerator";
+import type { AttendeeProfile } from "@/shared/attendees/types";
 
 const PARTNER_STORAGE_KEY = "hackathon-use-case-draft-v2";
 const CUSTOMER_STORAGE_KEY = "hackathon-use-case-draft-customer-v1";
@@ -35,6 +36,7 @@ export interface IntakeAnswers {
   painPoint: string;
   cxoOutcome: string;
   headcount: number;
+  attendees: AttendeeProfile[];
 }
 
 export interface DraftPick {
@@ -69,6 +71,7 @@ const defaultIntake: IntakeAnswers = {
   painPoint: "",
   cxoOutcome: "",
   headcount: 6,
+  attendees: [],
 };
 
 const initialState: HackathonState = {
@@ -203,7 +206,11 @@ export function HackathonDraftProvider({
   const completeIntake = useCallback(() => {
     setState((prev) => {
       const { industry, industryPhrase, pool } = tailorUseCasePool(prev.intake);
-      const participants = participantNames(prev.intake.headcount);
+      const attendees = prev.intake.attendees ?? [];
+      const participants =
+        attendees.length > 0
+          ? attendees.map((attendee) => `${attendee.name} (${attendee.role})`)
+          : participantNames(prev.intake.headcount);
       const snakeOrder = buildDraftSnakeOrder(participants.length, pool.length);
       return {
         ...prev,

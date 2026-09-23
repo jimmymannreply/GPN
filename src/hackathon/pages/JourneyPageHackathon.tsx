@@ -10,8 +10,13 @@ import { UseCaseCard } from "@/hackathon/components/UseCaseCard";
 import { industryLabel } from "@/hackathon/data/useCaseLibrary";
 import { useHackathonDraft } from "@/hackathon/hooks/useHackathonDraft";
 import { GeminiFlowMini, GeminiStackRibbon } from "@/shared/gemini/GeminiShowcase";
-import { ConversationalIntake } from "@/shared/conversational/ConversationalIntake";
-import { DRAFT_INTAKE_OPENING, draftIntakeSteps } from "@/hackathon/data/draftIntakeSteps";
+import { SessionIntakeWithAttendees } from "@/shared/conversational/SessionIntakeWithAttendees";
+import {
+  DRAFT_HEADCOUNT_PROMPT,
+  DRAFT_INTAKE_OPENING,
+  draftPrefixSteps,
+  draftSuffixSteps,
+} from "@/hackathon/data/draftIntakeSteps";
 import type { IntakeAnswers } from "@/hackathon/hooks/useHackathonDraft";
 
 export function JourneyPageHackathon({ customerMode = false }: { customerMode?: boolean }) {
@@ -97,12 +102,18 @@ export function JourneyPageHackathon({ customerMode = false }: { customerMode?: 
             <AgentPanel message={agentMessage} accent={state.brandAccent} />
 
             {state.phase === "intake" && (
-              <ConversationalIntake
+              <SessionIntakeWithAttendees
                 sessionKey={state.intakeSessionKey}
-                steps={draftIntakeSteps}
                 openingLine={DRAFT_INTAKE_OPENING}
                 accent={state.brandAccent}
-                onApply={applyIntakeField}
+                companyHint={state.intake.customerName}
+                prefixSteps={draftPrefixSteps}
+                headcountMin={4}
+                headcountMax={8}
+                headcountPrompt={DRAFT_HEADCOUNT_PROMPT}
+                suffixSteps={draftSuffixSteps}
+                onApplyField={applyIntakeField}
+                onAttendeesChange={(attendees) => updateIntake({ attendees })}
                 onComplete={completeIntake}
               />
             )}
