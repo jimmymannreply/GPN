@@ -75,6 +75,7 @@ export function LandingPageHackathon() {
           <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Link
               to={journeyPath}
+              state={{ forceIntake: true }}
               data-testid="hackathon-start"
               className="inline-flex rounded-dl px-8 py-3 text-sm font-semibold text-white shadow-card"
               style={{ backgroundColor: state.brandAccent }}

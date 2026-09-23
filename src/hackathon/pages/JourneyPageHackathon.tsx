@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { User } from "lucide-react";
 import { AgentPanel } from "@/hackathon/components/AgentPanel";
 import { GoogleSignInGate } from "@/hackathon/components/GoogleSignInGate";
@@ -12,14 +12,19 @@ import { useHackathonDraft } from "@/hackathon/hooks/useHackathonDraft";
 import { GeminiFlowMini, GeminiStackRibbon } from "@/shared/gemini/GeminiShowcase";
 import { SessionIntakeWithAttendees } from "@/shared/conversational/SessionIntakeWithAttendees";
 import {
+  DRAFT_CUSTOMER_HEADCOUNT_PROMPT,
+  DRAFT_CUSTOMER_INTAKE_OPENING,
   DRAFT_HEADCOUNT_PROMPT,
   DRAFT_INTAKE_OPENING,
+  draftCustomerPrefixSteps,
   draftPrefixSteps,
   draftSuffixSteps,
 } from "@/hackathon/data/draftIntakeSteps";
 import type { IntakeAnswers } from "@/hackathon/hooks/useHackathonDraft";
 
 export function JourneyPageHackathon({ customerMode = false }: { customerMode?: boolean }) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const {
     state,
     setBrand,
@@ -40,6 +45,13 @@ export function JourneyPageHackathon({ customerMode = false }: { customerMode?: 
   useEffect(() => {
     if (customerMode) setBrand("Google Cloud", "#1a73e8");
   }, [customerMode, setBrand]);
+
+  useEffect(() => {
+    const st = location.state as { forceIntake?: boolean } | null;
+    if (!st?.forceIntake) return;
+    returnToIntake();
+    navigate(location.pathname, { replace: true, state: {} });
+  }, [location.pathname, location.state, navigate, returnToIntake]);
 
   const applyIntakeField = (stepId: string, value: unknown) => {
     updateIntake({ [stepId]: value } as Partial<IntakeAnswers>);
@@ -104,13 +116,15 @@ export function JourneyPageHackathon({ customerMode = false }: { customerMode?: 
             {state.phase === "intake" && (
               <SessionIntakeWithAttendees
                 sessionKey={state.intakeSessionKey}
-                openingLine={DRAFT_INTAKE_OPENING}
+                openingLine={customerMode ? DRAFT_CUSTOMER_INTAKE_OPENING : DRAFT_INTAKE_OPENING}
                 accent={state.brandAccent}
                 companyHint={state.intake.customerName}
-                prefixSteps={draftPrefixSteps}
+                prefixSteps={customerMode ? draftCustomerPrefixSteps : draftPrefixSteps}
                 headcountMin={4}
                 headcountMax={8}
-                headcountPrompt={DRAFT_HEADCOUNT_PROMPT}
+                headcountPrompt={
+                  customerMode ? DRAFT_CUSTOMER_HEADCOUNT_PROMPT : DRAFT_HEADCOUNT_PROMPT
+                }
                 suffixSteps={draftSuffixSteps}
                 onApplyField={applyIntakeField}
                 onAttendeesChange={(attendees) => updateIntake({ attendees })}

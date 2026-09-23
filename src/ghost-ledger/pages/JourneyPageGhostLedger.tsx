@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { User } from "lucide-react";
 import { AgentPanel } from "@/hackathon/components/AgentPanel";
 import { PhaseStepper } from "@/hackathon/components/PhaseStepper";
@@ -11,20 +11,32 @@ import { useGhostLedger } from "@/ghost-ledger/hooks/useGhostLedger";
 import { GeminiBlueprintPanel, GeminiFlowMini, GeminiStackRibbon } from "@/shared/gemini/GeminiShowcase";
 import { SessionIntakeWithAttendees } from "@/shared/conversational/SessionIntakeWithAttendees";
 import {
+  LEDGER_CUSTOMER_HEADCOUNT_PROMPT,
+  LEDGER_CUSTOMER_INTAKE_OPENING,
   LEDGER_HEADCOUNT_PROMPT,
   LEDGER_INTAKE_OPENING,
+  ledgerCustomerPrefixSteps,
   ledgerPrefixSteps,
   ledgerSuffixSteps,
 } from "@/ghost-ledger/data/ledgerIntakeSteps";
 import type { LedgerIntake } from "@/ghost-ledger/data/costModel";
 
 export function JourneyPageGhostLedger({ customerMode = false }: { customerMode?: boolean }) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const gl = useGhostLedger();
-  const { state, agentMessage, liveLossUsd } = gl;
+  const { state, agentMessage, liveLossUsd, returnToIntake } = gl;
 
   useEffect(() => {
     if (customerMode) gl.setBrand("Google Cloud", "#1a73e8");
   }, [customerMode, gl.setBrand]);
+
+  useEffect(() => {
+    const st = location.state as { forceIntake?: boolean } | null;
+    if (!st?.forceIntake) return;
+    returnToIntake();
+    navigate(location.pathname, { replace: true, state: {} });
+  }, [location.pathname, location.state, navigate, returnToIntake]);
 
   const applyIntakeField = (stepId: string, value: unknown) => {
     gl.updateIntake({ [stepId]: value } as Partial<LedgerIntake>);
@@ -94,13 +106,17 @@ export function JourneyPageGhostLedger({ customerMode = false }: { customerMode?
             {state.phase === "intake" && (
               <SessionIntakeWithAttendees
                 sessionKey={state.intakeSessionKey}
-                openingLine={LEDGER_INTAKE_OPENING}
+                openingLine={
+                  customerMode ? LEDGER_CUSTOMER_INTAKE_OPENING : LEDGER_INTAKE_OPENING
+                }
                 accent={state.brandAccent}
                 companyHint={state.intake.customerName}
-                prefixSteps={ledgerPrefixSteps}
+                prefixSteps={customerMode ? ledgerCustomerPrefixSteps : ledgerPrefixSteps}
                 headcountMin={2}
                 headcountMax={5}
-                headcountPrompt={LEDGER_HEADCOUNT_PROMPT}
+                headcountPrompt={
+                  customerMode ? LEDGER_CUSTOMER_HEADCOUNT_PROMPT : LEDGER_HEADCOUNT_PROMPT
+                }
                 suffixSteps={ledgerSuffixSteps}
                 onApplyField={applyIntakeField}
                 onAttendeesChange={(attendees) => gl.updateIntake({ attendees })}

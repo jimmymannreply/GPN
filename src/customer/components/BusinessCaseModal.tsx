@@ -54,22 +54,28 @@ export function BusinessCaseModal({
             type="button"
             data-testid="choose-use-case-draft"
             className="rounded-xl border border-gray-200 p-4 text-left transition hover:border-[#1a73e8] hover:bg-blue-50/50"
-            onClick={() => navigate("/customer/use-case-draft")}
+            onClick={() =>
+              navigate("/customer/use-case-draft", { state: { forceIntake: true } })
+            }
           >
             <p className="font-medium text-gray-900">Prioritize my use cases</p>
             <p className="mt-1 text-sm text-gray-600">
-              Draft and rank Gemini-ready use cases with your team in the room.
+              Meet your stakeholders (LinkedIn-enriched), then draft and rank Gemini-ready use
+              cases with the team.
             </p>
           </button>
           <button
             type="button"
             data-testid="choose-ghost-ledger"
             className="rounded-xl border border-gray-200 p-4 text-left transition hover:border-[#1a73e8] hover:bg-blue-50/50"
-            onClick={() => navigate("/customer/ghost-ledger")}
+            onClick={() =>
+              navigate("/customer/ghost-ledger", { state: { forceIntake: true } })
+            }
           >
             <p className="font-medium text-gray-900">Show me the cost of waiting</p>
             <p className="mt-1 text-sm text-gray-600">
-              Watch the cost of inaction tick, then freeze a Gemini reversal play.
+              Enrich who&apos;s in the room from LinkedIn, watch the cost of inaction tick, then
+              freeze a Gemini reversal play.
             </p>
           </button>
         </div>

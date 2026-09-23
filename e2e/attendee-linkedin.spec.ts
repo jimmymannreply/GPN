@@ -62,4 +62,40 @@ test.describe("Attendee LinkedIn enrichment", () => {
 
     await expect(page.getByText(/spend per month/i)).toBeVisible();
   });
+
+  test("customer draft journey runs LinkedIn attendee intake", async ({ page }) => {
+    await page.goto("/customer/use-case-draft");
+    await page.evaluate(() => localStorage.clear());
+    await page.goto("/customer/use-case-draft");
+    await signIn(page);
+    await expect(page.getByText(/pull LinkedIn context/i)).toBeVisible();
+    await answer(page, "Northwind Retail");
+    await answer(page, "Retail · M365 + Google Cloud");
+    await answer(page, "Stores lack trusted answers at the register");
+    await answer(page, "Lift same-store sales 3%");
+    await expect(page.getByText(/enrich from LinkedIn/i)).toBeVisible();
+    await answer(page, "4");
+    await answer(page, "Jane Doe");
+    await expect(page.getByTestId("linkedin-profile-bubble")).toBeVisible({ timeout: 5000 });
+    await answer(page, "CXO sponsor");
+    await expect(page.getByText(/attendee 2 of 4/i)).toBeVisible();
+  });
+
+  test("customer ghost ledger journey runs LinkedIn attendee intake", async ({ page }) => {
+    await page.goto("/customer/ghost-ledger");
+    await page.evaluate(() => localStorage.clear());
+    await page.goto("/customer/ghost-ledger");
+    await signIn(page);
+    await expect(page.getByText(/LinkedIn lookup/i)).toBeVisible();
+    await answer(page, "Contoso Financial");
+    await answer(page, "Financial Services · M365");
+    await answer(page, "2");
+    await answer(page, "Alex Kim");
+    await expect(page.getByTestId("linkedin-profile-bubble")).toBeVisible({ timeout: 5000 });
+    await answer(page, "VP Ops");
+    await answer(page, "Sam Lee");
+    await expect(page.getByTestId("linkedin-profile-bubble")).toHaveCount(2, { timeout: 5000 });
+    await answer(page, "IT director");
+    await expect(page.getByText(/spend per month/i)).toBeVisible();
+  });
 });

@@ -71,6 +71,7 @@ export function LandingPageGhostLedger() {
 
           <Link
             to={journeyPath}
+            state={{ forceIntake: true }}
             data-testid="ghost-ledger-start"
             className="mt-10 inline-flex rounded-dl px-8 py-3 text-sm font-semibold text-white shadow-card"
             style={{ backgroundColor: state.brandAccent }}

@@ -9,6 +9,9 @@ import {
 export const LEDGER_INTAKE_OPENING =
   "Ghost Ledger mode — we'll use their real numbers, not benchmarks. I'll ask for spend, volume, and churn; then we'll start the clock.";
 
+export const LEDGER_CUSTOMER_INTAKE_OPENING =
+  "Let's show the cost of waiting. I'll identify who's in the room (with a LinkedIn lookup), capture your real numbers, then start the clock.";
+
 export const ledgerPrefixSteps: ConversationalStep[] = [
   {
     id: "customerName",
@@ -24,8 +27,26 @@ export const ledgerPrefixSteps: ConversationalStep[] = [
   },
 ];
 
+export const ledgerCustomerPrefixSteps: ConversationalStep[] = [
+  {
+    id: "customerName",
+    prompt: "What's your organization called?",
+    placeholder: "Contoso Financial",
+    parse: parsePlainText,
+  },
+  {
+    id: "industryStack",
+    prompt: "What industry and tool stack should we cost against?",
+    placeholder: "Financial Services · M365 + ServiceNow",
+    parse: parsePlainText,
+  },
+];
+
 export const LEDGER_HEADCOUNT_PROMPT =
   "How many people are in the room for this session? (2–5)";
+
+export const LEDGER_CUSTOMER_HEADCOUNT_PROMPT =
+  "How many stakeholders should we look up on LinkedIn for this session? (2–5)";
 
 export const ledgerSuffixSteps: ConversationalStep[] = [
   {
