@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Activity, User } from "lucide-react";
 import { AgentPanel } from "@/hackathon/components/AgentPanel";
@@ -13,9 +14,10 @@ import { ConversationalIntake } from "@/shared/conversational/ConversationalInta
 import { DRAFT_INTAKE_OPENING, draftIntakeSteps } from "@/hackathon/data/draftIntakeSteps";
 import type { IntakeAnswers } from "@/hackathon/hooks/useHackathonDraft";
 
-export function JourneyPageHackathon() {
+export function JourneyPageHackathon({ customerMode = false }: { customerMode?: boolean }) {
   const {
     state,
+    setBrand,
     updateIntake,
     completeIntake,
     returnToIntake,
@@ -30,6 +32,10 @@ export function JourneyPageHackathon() {
     resetHackathon,
   } = useHackathonDraft();
 
+  useEffect(() => {
+    if (customerMode) setBrand("Google Cloud", "#1a73e8");
+  }, [customerMode, setBrand]);
+
   const applyIntakeField = (stepId: string, value: unknown) => {
     updateIntake({ [stepId]: value } as Partial<IntakeAnswers>);
   };
@@ -43,7 +49,11 @@ export function JourneyPageHackathon() {
         >
           <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-xs text-dl-text-secondary">{state.brandName} · Use-Case Draft</p>
+              <p className="text-xs text-dl-text-secondary">
+                {customerMode
+                  ? "Gemini Enterprise · Prioritize my use cases"
+                  : `${state.brandName} · Use-Case Draft`}
+              </p>
               <p className="font-semibold">{state.intake.customerName || "New hackathon"}</p>
             </div>
             <div className="flex items-center gap-3 text-sm">
@@ -56,7 +66,10 @@ export function JourneyPageHackathon() {
               <button type="button" onClick={resetHackathon} className="text-xs text-dl-brand underline">
                 Reset
               </button>
-              <Link to="/hackathon" className="text-xs text-dl-text-secondary hover:underline">
+              <Link
+                to={customerMode ? "/customer" : "/hackathon"}
+                className="text-xs text-dl-text-secondary hover:underline"
+              >
                 Home
               </Link>
             </div>

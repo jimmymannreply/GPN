@@ -19,6 +19,7 @@ import { JourneyPageHackathon } from "@/hackathon/pages/JourneyPageHackathon";
 import { GhostLedgerProvider } from "@/ghost-ledger/hooks/useGhostLedger";
 import { LandingPageGhostLedger } from "@/ghost-ledger/pages/LandingPageGhostLedger";
 import { JourneyPageGhostLedger } from "@/ghost-ledger/pages/JourneyPageGhostLedger";
+import { GeminiEnterpriseLookalike } from "@/customer/pages/GeminiEnterpriseLookalike";
 
 const basename =
   import.meta.env.BASE_URL === "/" ? undefined : import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -62,6 +63,7 @@ export default function App() {
     <SpeechProvider>
       <BrowserRouter basename={basename}>
         <Routes>
+          <Route path="/customer" element={<GeminiEnterpriseLookalike />} />
           <Route element={<V1Shell />}>
             <Route path="/" element={<LandingPage />} />
             <Route path="/partner" element={<MockPartnerPage />} />
@@ -87,6 +89,10 @@ export default function App() {
           >
             <Route path="/hackathon" element={<LandingPageHackathon />} />
             <Route path="/hackathon/journey" element={<JourneyPageHackathon />} />
+            <Route
+              path="/customer/use-case-draft"
+              element={<JourneyPageHackathon customerMode />}
+            />
           </Route>
           <Route
             element={
@@ -97,6 +103,10 @@ export default function App() {
           >
             <Route path="/hackathon/ghost-ledger" element={<LandingPageGhostLedger />} />
             <Route path="/hackathon/ghost-ledger/journey" element={<JourneyPageGhostLedger />} />
+            <Route
+              path="/customer/ghost-ledger"
+              element={<JourneyPageGhostLedger customerMode />}
+            />
           </Route>
         </Routes>
       </BrowserRouter>

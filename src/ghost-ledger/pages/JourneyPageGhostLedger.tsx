@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Activity, User } from "lucide-react";
 import { AgentPanel } from "@/hackathon/components/AgentPanel";
@@ -12,9 +13,13 @@ import { ConversationalIntake } from "@/shared/conversational/ConversationalInta
 import { LEDGER_INTAKE_OPENING, ledgerIntakeSteps } from "@/ghost-ledger/data/ledgerIntakeSteps";
 import type { LedgerIntake } from "@/ghost-ledger/data/costModel";
 
-export function JourneyPageGhostLedger() {
+export function JourneyPageGhostLedger({ customerMode = false }: { customerMode?: boolean }) {
   const gl = useGhostLedger();
   const { state, agentMessage, liveLossUsd } = gl;
+
+  useEffect(() => {
+    if (customerMode) gl.setBrand("Google Cloud", "#1a73e8");
+  }, [customerMode, gl.setBrand]);
 
   const applyIntakeField = (stepId: string, value: unknown) => {
     gl.updateIntake({ [stepId]: value } as Partial<LedgerIntake>);
@@ -29,7 +34,11 @@ export function JourneyPageGhostLedger() {
         >
           <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-xs text-dl-text-secondary">{state.brandName} · Ghost Ledger</p>
+              <p className="text-xs text-dl-text-secondary">
+                {customerMode
+                  ? "Gemini Enterprise · Cost of waiting"
+                  : `${state.brandName} · Ghost Ledger`}
+              </p>
               <p className="font-semibold">{state.intake.customerName || "New session"}</p>
             </div>
             <div className="flex items-center gap-3 text-sm">
@@ -42,7 +51,10 @@ export function JourneyPageGhostLedger() {
               <button type="button" onClick={gl.resetSession} className="text-xs text-dl-brand underline">
                 Reset
               </button>
-              <Link to="/hackathon/ghost-ledger" className="text-xs text-dl-text-secondary hover:underline">
+              <Link
+                to={customerMode ? "/customer" : "/hackathon/ghost-ledger"}
+                className="text-xs text-dl-text-secondary hover:underline"
+              >
                 Home
               </Link>
             </div>
