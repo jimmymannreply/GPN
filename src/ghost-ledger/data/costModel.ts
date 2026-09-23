@@ -1,9 +1,12 @@
 import type { GeminiBlueprint } from "@/shared/gemini/geminiBlueprint";
 import { buildGeminiBlueprint } from "@/shared/gemini/geminiBlueprint";
+import type { AttendeeProfile } from "@/shared/attendees/types";
 
 export interface LedgerIntake {
   customerName: string;
   industryStack: string;
+  headcount: number;
+  attendees: AttendeeProfile[];
   monthlyToolSpend: number;
   ticketsPerMonth: number;
   minutesPerTicket: number;

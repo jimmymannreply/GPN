@@ -9,7 +9,7 @@ import {
 export const LEDGER_INTAKE_OPENING =
   "Ghost Ledger mode — we'll use their real numbers, not benchmarks. I'll ask for spend, volume, and churn; then we'll start the clock.";
 
-export const ledgerIntakeSteps: ConversationalStep[] = [
+export const ledgerPrefixSteps: ConversationalStep[] = [
   {
     id: "customerName",
     prompt: "Which customer is in the room for this session?",
@@ -22,6 +22,12 @@ export const ledgerIntakeSteps: ConversationalStep[] = [
     placeholder: "Financial Services · M365 + ServiceNow",
     parse: parsePlainText,
   },
+];
+
+export const LEDGER_HEADCOUNT_PROMPT =
+  "How many people are in the room for this session? (2–5)";
+
+export const ledgerSuffixSteps: ConversationalStep[] = [
   {
     id: "monthlyToolSpend",
     prompt: "Roughly what do they spend per month on the tools we're trying to get more value from?",

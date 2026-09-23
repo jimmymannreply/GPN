@@ -52,6 +52,8 @@ export interface GhostState {
 const defaultIntake: LedgerIntake = {
   customerName: "",
   industryStack: "",
+  headcount: 3,
+  attendees: [],
   monthlyToolSpend: 0,
   ticketsPerMonth: 0,
   minutesPerTicket: 12,

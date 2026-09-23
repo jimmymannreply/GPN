@@ -9,8 +9,13 @@ import { GoogleSignInGateGhost } from "@/ghost-ledger/components/GoogleSignInGat
 import { TickingLedger } from "@/ghost-ledger/components/TickingLedger";
 import { useGhostLedger } from "@/ghost-ledger/hooks/useGhostLedger";
 import { GeminiBlueprintPanel, GeminiFlowMini, GeminiStackRibbon } from "@/shared/gemini/GeminiShowcase";
-import { ConversationalIntake } from "@/shared/conversational/ConversationalIntake";
-import { LEDGER_INTAKE_OPENING, ledgerIntakeSteps } from "@/ghost-ledger/data/ledgerIntakeSteps";
+import { SessionIntakeWithAttendees } from "@/shared/conversational/SessionIntakeWithAttendees";
+import {
+  LEDGER_HEADCOUNT_PROMPT,
+  LEDGER_INTAKE_OPENING,
+  ledgerPrefixSteps,
+  ledgerSuffixSteps,
+} from "@/ghost-ledger/data/ledgerIntakeSteps";
 import type { LedgerIntake } from "@/ghost-ledger/data/costModel";
 
 export function JourneyPageGhostLedger({ customerMode = false }: { customerMode?: boolean }) {
@@ -40,6 +45,11 @@ export function JourneyPageGhostLedger({ customerMode = false }: { customerMode?
                   : `${state.brandName} · Ghost Ledger`}
               </p>
               <p className="font-semibold">{state.intake.customerName || "New session"}</p>
+              {state.intake.attendees?.length > 0 && (
+                <p className="text-xs text-dl-text-secondary">
+                  Room: {state.intake.attendees.map((attendee) => attendee.name).join(" · ")}
+                </p>
+              )}
             </div>
             <div className="flex items-center gap-3 text-sm">
               {state.user && (
@@ -82,12 +92,18 @@ export function JourneyPageGhostLedger({ customerMode = false }: { customerMode?
             <AgentPanel message={agentMessage} accent={state.brandAccent} />
 
             {state.phase === "intake" && (
-              <ConversationalIntake
+              <SessionIntakeWithAttendees
                 sessionKey={state.intakeSessionKey}
-                steps={ledgerIntakeSteps}
                 openingLine={LEDGER_INTAKE_OPENING}
                 accent={state.brandAccent}
-                onApply={applyIntakeField}
+                companyHint={state.intake.customerName}
+                prefixSteps={ledgerPrefixSteps}
+                headcountMin={2}
+                headcountMax={5}
+                headcountPrompt={LEDGER_HEADCOUNT_PROMPT}
+                suffixSteps={ledgerSuffixSteps}
+                onApplyField={applyIntakeField}
+                onAttendeesChange={(attendees) => gl.updateIntake({ attendees })}
                 onComplete={gl.completeIntake}
               />
             )}
