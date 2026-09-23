@@ -20,6 +20,7 @@ import { GhostLedgerProvider } from "@/ghost-ledger/hooks/useGhostLedger";
 import { LandingPageGhostLedger } from "@/ghost-ledger/pages/LandingPageGhostLedger";
 import { JourneyPageGhostLedger } from "@/ghost-ledger/pages/JourneyPageGhostLedger";
 import { GeminiEnterpriseLookalike } from "@/customer/pages/GeminiEnterpriseLookalike";
+import { TelemetryPage } from "@/telemetry/pages/TelemetryPage";
 
 const basename =
   import.meta.env.BASE_URL === "/" ? undefined : import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -64,6 +65,7 @@ export default function App() {
       <BrowserRouter basename={basename}>
         <Routes>
           <Route path="/customer" element={<GeminiEnterpriseLookalike />} />
+          <Route path="/telemetry" element={<TelemetryPage />} />
           <Route element={<V1Shell />}>
             <Route path="/" element={<LandingPage />} />
             <Route path="/partner" element={<MockPartnerPage />} />

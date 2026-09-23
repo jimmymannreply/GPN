@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Activity, User } from "lucide-react";
+import { User } from "lucide-react";
 import { AgentPanel } from "@/hackathon/components/AgentPanel";
 import { GoogleSignInGate } from "@/hackathon/components/GoogleSignInGate";
 import { HandoffPanel } from "@/hackathon/components/HandoffPanel";
@@ -83,8 +83,7 @@ export function JourneyPageHackathon({ customerMode = false }: { customerMode?: 
           </div>
         </header>
 
-        <main className="mx-auto grid max-w-6xl gap-6 px-6 py-8 lg:grid-cols-[1fr_280px]">
-          <div className="space-y-6">
+        <main className="mx-auto max-w-6xl space-y-6 px-6 py-8">
             <PhaseStepper phase={state.phase} />
             {state.phase !== "intake" && (
               <GeminiStackRibbon
@@ -230,36 +229,6 @@ export function JourneyPageHackathon({ customerMode = false }: { customerMode?: 
                 <HandoffPanel />
               </>
             )}
-          </div>
-
-          <aside className="space-y-4">
-            <div className="rounded-dl border border-dl-border bg-dl-surface p-4 shadow-card">
-              <div className="flex items-center gap-2 text-sm font-semibold">
-                <Activity className="h-4 w-4 text-dl-brand" />
-                Telemetry (POC)
-              </div>
-              <ul className="mt-3 max-h-64 space-y-2 overflow-y-auto text-[11px] text-dl-text-secondary">
-                {state.telemetry.length === 0 && <li>No events yet.</li>}
-                {state.telemetry
-                  .slice()
-                  .reverse()
-                  .map((t, i) => (
-                    <li key={`${t.at}-${i}`}>
-                      <span className="font-medium text-dl-text">{t.event}</span>
-                      {t.detail ? ` · ${t.detail}` : ""}
-                    </li>
-                  ))}
-              </ul>
-            </div>
-            <div className="rounded-dl border border-dl-border bg-dl-surface p-4 text-xs text-dl-text-secondary shadow-card">
-              <p className="font-semibold text-dl-text">Pillars</p>
-              <ul className="mt-2 space-y-1">
-                <li>Co-sell — funding &amp; pilot seam</li>
-                <li>Services — facilitator playbooks</li>
-                <li>Technology — scored use-case library</li>
-              </ul>
-            </div>
-          </aside>
         </main>
       </div>
     </GoogleSignInGate>

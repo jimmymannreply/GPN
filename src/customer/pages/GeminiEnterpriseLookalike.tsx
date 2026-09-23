@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { BusinessCaseModal } from "@/customer/components/BusinessCaseModal";
 
 const FEATURES = [
@@ -95,7 +96,12 @@ export function GeminiEnterpriseLookalike() {
       </section>
 
       <footer className="border-t border-gray-200 py-8 text-center text-xs text-gray-500">
-        Demo lookalike for stage-fit hackathon — not an official Google Cloud page.
+        <p>Demo lookalike for stage-fit hackathon — not an official Google Cloud page.</p>
+        <p className="mt-2">
+          <Link to="/telemetry" className="text-[#1a73e8] hover:underline">
+            Partner telemetry
+          </Link>
+        </p>
       </footer>
 
       <BusinessCaseModal open={modalOpen} onClose={() => setModalOpen(false)} />
