@@ -15,7 +15,8 @@ import {
 } from "@/hackathon/data/useCaseLibrary";
 import { tailorUseCasePool } from "@/hackathon/data/intakeUseCaseGenerator";
 
-const STORAGE_KEY = "hackathon-use-case-draft-v2";
+const PARTNER_STORAGE_KEY = "hackathon-use-case-draft-v2";
+const CUSTOMER_STORAGE_KEY = "hackathon-use-case-draft-customer-v1";
 
 export type HackathonPhase = "intake" | "plan" | "draft" | "outcome" | "handoff";
 
@@ -132,10 +133,18 @@ interface HackathonContextValue {
 
 const HackathonContext = createContext<HackathonContextValue | null>(null);
 
-export function HackathonDraftProvider({ children }: { children: ReactNode }) {
+export function HackathonDraftProvider({
+  children,
+  sessionScope = "partner",
+}: {
+  children: ReactNode;
+  sessionScope?: "partner" | "customer";
+}) {
+  const storageKey =
+    sessionScope === "customer" ? CUSTOMER_STORAGE_KEY : PARTNER_STORAGE_KEY;
   const [state, setState] = useState<HackathonState>(() => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(storageKey);
       if (raw) return JSON.parse(raw) as HackathonState;
     } catch {
       /* ignore */
@@ -155,10 +164,10 @@ export function HackathonDraftProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      localStorage.setItem(storageKey, JSON.stringify(state));
     }, 300);
     return () => clearTimeout(timer);
-  }, [state]);
+  }, [state, storageKey]);
 
   // Recover sessions stuck on Run after all use cases were drafted (older bug).
   useEffect(() => {
@@ -296,8 +305,8 @@ export function HackathonDraftProvider({ children }: { children: ReactNode }) {
 
   const resetHackathon = useCallback(() => {
     setState({ ...initialState, intakeSessionKey: Date.now() });
-    localStorage.removeItem(STORAGE_KEY);
-  }, []);
+    localStorage.removeItem(storageKey);
+  }, [storageKey]);
 
   const recordOutcomeDownload = useCallback((kind: "shortlist" | "use-case", detail: string | number) => {
     setState((prev) => ({

@@ -41,7 +41,7 @@ export function JourneyPageHackathon({ customerMode = false }: { customerMode?: 
   };
 
   return (
-    <GoogleSignInGate>
+    <GoogleSignInGate customerMode={customerMode}>
       <div className="min-h-screen bg-dl-page text-dl-text">
         <header
           className="border-b border-dl-border bg-dl-surface px-6 py-3 shadow-card"

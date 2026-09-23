@@ -3,7 +3,7 @@ import { useHackathonDraft } from "@/hackathon/hooks/useHackathonDraft";
 
 const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? "";
 
-function DemoGoogleButton() {
+function DemoGoogleButton({ customerMode }: { customerMode: boolean }) {
   const { setUser } = useHackathonDraft();
 
   return (
@@ -13,7 +13,9 @@ function DemoGoogleButton() {
       onClick={() =>
         setUser({
           name: "Alex Rivera",
-          email: "alex.rivera@partner.example",
+          email: customerMode
+            ? "alex.rivera@customer.example"
+            : "alex.rivera@partner.example",
           demo: true,
         })
       }
@@ -60,7 +62,13 @@ function LiveGoogleLogin() {
   );
 }
 
-export function GoogleSignInGate({ children }: { children: React.ReactNode }) {
+export function GoogleSignInGate({
+  children,
+  customerMode = false,
+}: {
+  children: React.ReactNode;
+  customerMode?: boolean;
+}) {
   const { state } = useHackathonDraft();
 
   if (state.user) {
@@ -69,13 +77,16 @@ export function GoogleSignInGate({ children }: { children: React.ReactNode }) {
 
   const inner = (
     <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-6 py-16">
-      <h1 className="text-2xl font-semibold text-dl-text">Sign in to run the draft</h1>
+      <h1 className="text-2xl font-semibold text-dl-text">
+        {customerMode ? "Sign in to build your business case" : "Sign in to run the draft"}
+      </h1>
       <p className="mt-2 text-sm text-dl-text-secondary">
-        Google sign-in gates the partner workspace. POC uses your identity only for telemetry
-        attribution — no production tenancy.
+        {customerMode
+          ? "Continue with Google to save your progress through the Gemini Enterprise use-case workshop."
+          : "Google sign-in gates the partner workspace. POC uses your identity only for telemetry attribution — no production tenancy."}
       </p>
       <div className="mt-8 flex justify-center">
-        {clientId ? <LiveGoogleLogin /> : <DemoGoogleButton />}
+        {clientId ? <LiveGoogleLogin /> : <DemoGoogleButton customerMode={customerMode} />}
       </div>
       {!clientId && (
         <p className="mt-4 text-center text-xs text-dl-text-secondary">

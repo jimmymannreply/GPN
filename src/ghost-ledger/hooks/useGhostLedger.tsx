@@ -15,7 +15,8 @@ import {
   type LedgerIntake,
 } from "@/ghost-ledger/data/costModel";
 
-const STORAGE_KEY = "ghost-ledger-hackathon-v1";
+const PARTNER_STORAGE_KEY = "ghost-ledger-hackathon-v1";
+const CUSTOMER_STORAGE_KEY = "ghost-ledger-customer-v1";
 
 export type GhostPhase = "intake" | "plan" | "run" | "outcome" | "handoff";
 export type HandoffAudience = "partner" | "customer";
@@ -99,10 +100,18 @@ interface GhostContextValue {
 
 const GhostContext = createContext<GhostContextValue | null>(null);
 
-export function GhostLedgerProvider({ children }: { children: ReactNode }) {
+export function GhostLedgerProvider({
+  children,
+  sessionScope = "partner",
+}: {
+  children: ReactNode;
+  sessionScope?: "partner" | "customer";
+}) {
+  const storageKey =
+    sessionScope === "customer" ? CUSTOMER_STORAGE_KEY : PARTNER_STORAGE_KEY;
   const [state, setState] = useState<GhostState>(() => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(storageKey);
       if (raw) return JSON.parse(raw) as GhostState;
     } catch {
       /* ignore */
@@ -112,10 +121,10 @@ export function GhostLedgerProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      localStorage.setItem(storageKey, JSON.stringify(state));
     }, 300);
     return () => clearTimeout(timer);
-  }, [state]);
+  }, [state, storageKey]);
 
   useEffect(() => {
     if (state.phase !== "run" || state.frozen || !state.breakdown) return;
@@ -258,8 +267,8 @@ export function GhostLedgerProvider({ children }: { children: ReactNode }) {
 
   const resetSession = useCallback(() => {
     setState({ ...initialState, intakeSessionKey: Date.now() });
-    localStorage.removeItem(STORAGE_KEY);
-  }, []);
+    localStorage.removeItem(storageKey);
+  }, [storageKey]);
 
   const liveLossUsd = useMemo(() => {
     if (!state.breakdown) return 0;

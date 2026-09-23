@@ -3,7 +3,13 @@ import { useGhostLedger, type GoogleUser } from "@/ghost-ledger/hooks/useGhostLe
 
 const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? "";
 
-function SignInButtons({ onSignIn }: { onSignIn: (user: GoogleUser) => void }) {
+function SignInButtons({
+  onSignIn,
+  customerMode,
+}: {
+  onSignIn: (user: GoogleUser) => void;
+  customerMode: boolean;
+}) {
   if (clientId) {
     return (
       <GoogleLogin
@@ -41,7 +47,9 @@ function SignInButtons({ onSignIn }: { onSignIn: (user: GoogleUser) => void }) {
       onClick={() =>
         onSignIn({
           name: "Alex Rivera",
-          email: "alex.rivera@partner.example",
+          email: customerMode
+            ? "alex.rivera@customer.example"
+            : "alex.rivera@partner.example",
           demo: true,
         })
       }
@@ -53,19 +61,31 @@ function SignInButtons({ onSignIn }: { onSignIn: (user: GoogleUser) => void }) {
   );
 }
 
-export function GoogleSignInGateGhost({ children }: { children: React.ReactNode }) {
+export function GoogleSignInGateGhost({
+  children,
+  customerMode = false,
+}: {
+  children: React.ReactNode;
+  customerMode?: boolean;
+}) {
   const { state, setUser } = useGhostLedger();
 
   if (state.user) return <>{children}</>;
 
   const inner = (
     <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-6 py-16">
-      <h1 className="text-2xl font-semibold text-dl-text">Sign in to open the ledger</h1>
+      <h1 className="text-2xl font-semibold text-dl-text">
+        {customerMode
+          ? "Sign in to calculate the cost of waiting"
+          : "Sign in to open the ledger"}
+      </h1>
       <p className="mt-2 text-sm text-dl-text-secondary">
-        Google sign-in gates the partner workspace for the Ghost Ledger session.
+        {customerMode
+          ? "Continue with Google to save your Gemini Enterprise cost-of-inaction session."
+          : "Google sign-in gates the partner workspace for the Ghost Ledger session."}
       </p>
       <div className="mt-8 flex justify-center">
-        <SignInButtons onSignIn={setUser} />
+        <SignInButtons onSignIn={setUser} customerMode={customerMode} />
       </div>
     </div>
   );

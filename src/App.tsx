@@ -89,11 +89,15 @@ export default function App() {
           >
             <Route path="/hackathon" element={<LandingPageHackathon />} />
             <Route path="/hackathon/journey" element={<JourneyPageHackathon />} />
-            <Route
-              path="/customer/use-case-draft"
-              element={<JourneyPageHackathon customerMode />}
-            />
           </Route>
+          <Route
+            path="/customer/use-case-draft"
+            element={
+              <HackathonDraftProvider sessionScope="customer">
+                <JourneyPageHackathon customerMode />
+              </HackathonDraftProvider>
+            }
+          />
           <Route
             element={
               <GhostLedgerProvider>
@@ -103,11 +107,15 @@ export default function App() {
           >
             <Route path="/hackathon/ghost-ledger" element={<LandingPageGhostLedger />} />
             <Route path="/hackathon/ghost-ledger/journey" element={<JourneyPageGhostLedger />} />
-            <Route
-              path="/customer/ghost-ledger"
-              element={<JourneyPageGhostLedger customerMode />}
-            />
           </Route>
+          <Route
+            path="/customer/ghost-ledger"
+            element={
+              <GhostLedgerProvider sessionScope="customer">
+                <JourneyPageGhostLedger customerMode />
+              </GhostLedgerProvider>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </SpeechProvider>

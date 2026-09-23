@@ -26,7 +26,7 @@ export function JourneyPageGhostLedger({ customerMode = false }: { customerMode?
   };
 
   return (
-    <GoogleSignInGateGhost>
+    <GoogleSignInGateGhost customerMode={customerMode}>
       <div className="min-h-screen bg-dl-page text-dl-text">
         <header
           className="border-b border-dl-border bg-dl-surface px-6 py-3 shadow-card"
