@@ -31,6 +31,22 @@ export function parseHeadcount(raw: string): { valid: boolean; value: number; er
   return { valid: true, value: Math.round(n) };
 }
 
+export function parseHeadcountInRange(
+  raw: string,
+  min: number,
+  max: number
+): { valid: boolean; value: number; error?: string } {
+  const n = Number(raw.replace(/[,\s]/g, ""));
+  if (!Number.isFinite(n) || n < min || n > max || !Number.isInteger(n)) {
+    return {
+      valid: false,
+      value: min,
+      error: `Pick a whole number between ${min} and ${max}.`,
+    };
+  }
+  return { valid: true, value: n };
+}
+
 export function parseHourlyCost(raw: string): { valid: boolean; value: number; error?: string } {
   const trimmed = raw.trim().toLowerCase();
   if (!trimmed || trimmed === "default" || trimmed === "skip") {
