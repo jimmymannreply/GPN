@@ -22,9 +22,14 @@ export function LandingPageGhostLedger() {
             </p>
             <p className="text-lg font-semibold">The Ghost Ledger · Concept 4</p>
           </div>
-          <Link to="/hackathon" className="text-sm text-dl-brand hover:underline">
-            Use-Case Draft
-          </Link>
+          <div className="flex gap-3 text-sm">
+            <Link to="/telemetry" className="text-dl-brand hover:underline">
+              Telemetry
+            </Link>
+            <Link to="/hackathon" className="text-dl-brand hover:underline">
+              Use-Case Draft
+            </Link>
+          </div>
         </div>
       </header>
 

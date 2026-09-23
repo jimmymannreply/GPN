@@ -43,7 +43,8 @@ jobs:
             dist/hackathon/journey \
             dist/hackathon/ghost-ledger/journey \
             dist/customer/use-case-draft \
-            dist/customer/ghost-ledger
+            dist/customer/ghost-ledger \
+            dist/telemetry
           cp dist/index.html dist/hackathon/index.html
           cp dist/index.html dist/hackathon/journey/index.html
           cp dist/index.html dist/hackathon/ghost-ledger/index.html
@@ -51,6 +52,7 @@ jobs:
           cp dist/index.html dist/customer/index.html
           cp dist/index.html dist/customer/use-case-draft/index.html
           cp dist/index.html dist/customer/ghost-ledger/index.html
+          cp dist/index.html dist/telemetry/index.html
 
       - uses: actions/upload-pages-artifact@v3
         with:

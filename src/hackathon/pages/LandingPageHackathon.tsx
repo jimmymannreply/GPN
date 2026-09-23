@@ -23,6 +23,9 @@ export function LandingPageHackathon() {
             <p className="text-lg font-semibold">Use-Case Draft · Concept 2</p>
           </div>
           <div className="flex gap-3 text-sm">
+            <Link to="/telemetry" className="text-dl-brand hover:underline">
+              Telemetry
+            </Link>
             <Link to="/hackathon/ghost-ledger" className="text-dl-brand hover:underline">
               Ghost Ledger
             </Link>
