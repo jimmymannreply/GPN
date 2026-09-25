@@ -25,6 +25,7 @@ function stageLabel(stage: SessionStage): string {
 type DashboardNavState = {
   format?: SessionFormat;
   startSession?: boolean;
+  preserveSeed?: boolean;
 };
 
 export function CustomerDashboardPage() {
@@ -34,6 +35,10 @@ export function CustomerDashboardPage() {
 
   useEffect(() => {
     const nav = (location.state ?? {}) as DashboardNavState;
+    if (nav.preserveSeed) {
+      navigate(".", { replace: true, state: {} });
+      return;
+    }
     if (!nav.startSession) return;
     const format: SessionFormat = nav.format === "ledger" ? "ledger" : "draft";
     startSession(format);
@@ -65,6 +70,11 @@ export function CustomerDashboardPage() {
       <main className="mx-auto max-w-5xl space-y-6 px-6 py-10">
         <section className="rounded-dl border border-dl-border bg-dl-surface p-6 shadow-card">
           <h2 className="text-lg font-semibold">Current session</h2>
+          {state.crmAccount && (
+            <p className="mt-2 text-sm font-medium" data-testid="session-customer">
+              {state.crmAccount.company}
+            </p>
+          )}
           <dl className="mt-4 grid gap-4 sm:grid-cols-3">
             <div>
               <dt className="text-xs uppercase tracking-wider text-dl-text-secondary">Format</dt>

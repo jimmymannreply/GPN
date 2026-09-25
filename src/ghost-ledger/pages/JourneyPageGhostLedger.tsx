@@ -63,9 +63,11 @@ export function JourneyPageGhostLedger({ customerMode = false }: { customerMode?
         >
           <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-xs text-dl-text-secondary">
+              <p className="text-xs uppercase tracking-wider text-dl-text-secondary">
                 {customerMode
-                  ? "Gemini Enterprise · Cost of waiting"
+                  ? state.phase === "run" || state.phase === "outcome"
+                    ? "Partner network · Value session · Live ledger"
+                    : "Gemini Enterprise · Cost of waiting"
                   : `${state.brandName} · Ghost Ledger`}
               </p>
               <p className="font-semibold">{state.intake.customerName || "New session"}</p>

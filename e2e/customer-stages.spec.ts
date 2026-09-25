@@ -10,6 +10,7 @@ test.describe("Customer staged session entry", () => {
   test("campaign chooser lands on customer dashboard", async ({ page }) => {
     await page.getByTestId("build-business-case").click();
     await page.getByTestId("choose-use-case-draft").click();
+    await page.getByTestId("next-partner-session").click();
     await expect(page).toHaveURL(/\/customer\/dashboard/);
     await expect(page.getByTestId("customer-dashboard")).toBeVisible();
     await expect(page.getByTestId("pcm-telemetry")).toHaveCount(0);
@@ -18,6 +19,7 @@ test.describe("Customer staged session entry", () => {
   test("ledger chooser lands on customer dashboard", async ({ page }) => {
     await page.getByTestId("build-business-case").click();
     await page.getByTestId("choose-ghost-ledger").click();
+    await page.getByTestId("next-partner-session").click();
     await expect(page).toHaveURL(/\/customer\/dashboard/);
     await expect(page.getByTestId("customer-dashboard")).toBeVisible();
     await expect(page.getByTestId("session-format")).toHaveText("Ghost ledger");
@@ -27,6 +29,7 @@ test.describe("Customer staged session entry", () => {
   test("CRM pick advances to scope", async ({ page }) => {
     await page.getByTestId("build-business-case").click();
     await page.getByTestId("choose-use-case-draft").click();
+    await page.getByTestId("next-partner-session").click();
     await page.getByTestId("continue-session").click();
     await expect(page).toHaveURL(/\/customer\/session/);
     await expect(page.getByTestId("customer-session")).toBeVisible();

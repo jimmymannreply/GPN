@@ -3,7 +3,10 @@ import { test, expect } from "@playwright/test";
 test.describe("Customer Gemini Enterprise entry", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/customer");
-    await page.evaluate(() => localStorage.clear());
+    await page.evaluate(() => {
+      localStorage.clear();
+      sessionStorage.clear();
+    });
     await page.goto("/customer");
   });
 
@@ -21,21 +24,63 @@ test.describe("Customer Gemini Enterprise entry", () => {
     await expect(page.getByRole("dialog")).toBeHidden();
   });
 
-  // Modal now lands on /customer/dashboard (Task 5). Deep produce-artifacts e2e is Task 7.
-  test("modal routes draft chooser to customer dashboard", async ({ page }) => {
+  test("format choice shows next actions", async ({ page }) => {
     await page.getByTestId("build-business-case").click();
     await page.getByTestId("choose-use-case-draft").click();
+    await expect(page.getByTestId("next-schedule-hackathon")).toBeVisible();
+    await expect(page.getByTestId("next-apply-daf")).toBeVisible();
+    await expect(page.getByTestId("next-partner-session")).toBeVisible();
+    await expect(page).not.toHaveURL(/\/customer\/dashboard/);
+  });
+
+  test("partner session next action lands on dashboard", async ({ page }) => {
+    await page.getByTestId("build-business-case").click();
+    await page.getByTestId("choose-use-case-draft").click();
+    await page.getByTestId("next-partner-session").click();
     await expect(page).toHaveURL(/\/customer\/dashboard/);
     await expect(page.getByTestId("customer-dashboard")).toBeVisible();
     await expect(page.getByTestId("pcm-telemetry")).toHaveCount(0);
   });
 
-  test("modal routes ledger chooser to customer dashboard", async ({ page }) => {
+  test("ledger partner session lands on dashboard", async ({ page }) => {
     await page.getByTestId("build-business-case").click();
     await page.getByTestId("choose-ghost-ledger").click();
+    await page.getByTestId("next-partner-session").click();
     await expect(page).toHaveURL(/\/customer\/dashboard/);
-    await expect(page.getByTestId("customer-dashboard")).toBeVisible();
-    await expect(page.getByTestId("pcm-telemetry")).toHaveCount(0);
+    await expect(page.getByTestId("session-format")).toHaveText("Ghost ledger");
+  });
+
+  test("DAF next action opens funding", async ({ page }) => {
+    await page.getByTestId("build-business-case").click();
+    await page.getByTestId("choose-use-case-draft").click();
+    await page.getByTestId("next-apply-daf").click();
+    await expect(page).toHaveURL(/\/funding/);
+    await expect(page.getByTestId("funding-page")).toBeVisible();
+  });
+
+  test("schedule opens scheduler with calendar links", async ({ page }) => {
+    await page.getByTestId("build-business-case").click();
+    await page.getByTestId("choose-use-case-draft").click();
+    await page.getByTestId("next-schedule-hackathon").click();
+    await expect(page.getByTestId("hackathon-scheduler")).toBeVisible();
+    await expect(page.getByTestId("scheduler-google")).toHaveAttribute(
+      "href",
+      /calendar\.google\.com/,
+    );
+    await expect(page.getByTestId("scheduler-outlook")).toHaveAttribute(
+      "href",
+      /outlook\.live\.com/,
+    );
+  });
+
+  test("demo preseed partner path shows Heartland", async ({ page }) => {
+    await page.getByTestId("demo-preseed").check();
+    await page.getByTestId("build-business-case").click();
+    await page.getByTestId("choose-use-case-draft").click();
+    await page.getByTestId("next-partner-session").click();
+    await expect(page).toHaveURL(/\/customer\/dashboard/);
+    await expect(page.getByText(/Heartland Mutual/i)).toBeVisible();
+    await expect(page.getByTestId("session-stage")).toHaveText(/Plan/i);
   });
 
   test("customer draft starts fresh without overwriting partner storage", async ({ page }) => {

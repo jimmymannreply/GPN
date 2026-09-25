@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { BusinessCaseModal } from "@/customer/components/BusinessCaseModal";
+import {
+  isDemoPreseedEnabled,
+  setDemoPreseedEnabled,
+} from "@/customer/data/demoPreseed";
 
 const FEATURES = [
   {
@@ -19,8 +23,14 @@ const FEATURES = [
 
 export function GeminiEnterpriseLookalike() {
   const [modalOpen, setModalOpen] = useState(false);
+  const [demoPreseed, setDemoPreseed] = useState(() => isDemoPreseedEnabled());
 
   const openModal = () => setModalOpen(true);
+
+  const onTogglePreseed = (on: boolean) => {
+    setDemoPreseed(on);
+    setDemoPreseedEnabled(on);
+  };
 
   return (
     <div className="min-h-screen bg-white text-gray-900" data-testid="customer-gemini-landing">
@@ -58,6 +68,18 @@ export function GeminiEnterpriseLookalike() {
             Learn more
           </a>
         </div>
+        <label className="mt-4 flex cursor-pointer items-center gap-2 text-sm text-gray-600">
+          <input
+            type="checkbox"
+            checked={demoPreseed}
+            onChange={(e) => onTogglePreseed(e.target.checked)}
+            data-testid="demo-preseed"
+          />
+          <span>
+            <span className="font-medium text-gray-800">Demo:</span> pre-fill customer data for a
+            faster walkthrough
+          </span>
+        </label>
       </section>
 
       <section id="features" className="border-t border-gray-100 bg-gray-50">
