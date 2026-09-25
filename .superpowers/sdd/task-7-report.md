@@ -1,7 +1,7 @@
 # Task 7 report: Produce artifacts handoff (seed + navigate)
 
 **Branch:** `feature/partner-home-customer-stages`  
-**Commit:** (pending) — Seed customer journeys from staged session for Produce artifacts.
+**Commit:** `65727a3` — Seed customer journeys from staged session for Produce artifacts.
 
 ## Done
 
