@@ -21,6 +21,7 @@ import { LandingPageGhostLedger } from "@/ghost-ledger/pages/LandingPageGhostLed
 import { JourneyPageGhostLedger } from "@/ghost-ledger/pages/JourneyPageGhostLedger";
 import { GeminiEnterpriseLookalike } from "@/customer/pages/GeminiEnterpriseLookalike";
 import { CustomerDashboardPage } from "@/customer/pages/CustomerDashboardPage";
+import { CustomerSessionPage } from "@/customer/pages/CustomerSessionPage";
 import { CustomerSessionProvider } from "@/customer/hooks/useCustomerSession";
 import { TelemetryPage } from "@/telemetry/pages/TelemetryPage";
 import { PartnerHomePage } from "@/partner-home/pages/PartnerHomePage";
@@ -79,6 +80,7 @@ export default function App() {
             }
           >
             <Route path="/customer/dashboard" element={<CustomerDashboardPage />} />
+            <Route path="/customer/session" element={<CustomerSessionPage />} />
           </Route>
           <Route path="/telemetry" element={<TelemetryPage />} />
           <Route element={<V1Shell />}>
