@@ -55,7 +55,9 @@ export function BusinessCaseModal({
             data-testid="choose-use-case-draft"
             className="rounded-xl border border-gray-200 p-4 text-left transition hover:border-[#1a73e8] hover:bg-blue-50/50"
             onClick={() =>
-              navigate("/customer/use-case-draft", { state: { forceIntake: true } })
+              navigate("/customer/dashboard", {
+                state: { format: "draft", startSession: true },
+              })
             }
           >
             <p className="font-medium text-gray-900">Prioritize my use cases</p>
@@ -69,7 +71,9 @@ export function BusinessCaseModal({
             data-testid="choose-ghost-ledger"
             className="rounded-xl border border-gray-200 p-4 text-left transition hover:border-[#1a73e8] hover:bg-blue-50/50"
             onClick={() =>
-              navigate("/customer/ghost-ledger", { state: { forceIntake: true } })
+              navigate("/customer/dashboard", {
+                state: { format: "ledger", startSession: true },
+              })
             }
           >
             <p className="font-medium text-gray-900">Show me the cost of waiting</p>

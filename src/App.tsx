@@ -20,6 +20,8 @@ import { GhostLedgerProvider } from "@/ghost-ledger/hooks/useGhostLedger";
 import { LandingPageGhostLedger } from "@/ghost-ledger/pages/LandingPageGhostLedger";
 import { JourneyPageGhostLedger } from "@/ghost-ledger/pages/JourneyPageGhostLedger";
 import { GeminiEnterpriseLookalike } from "@/customer/pages/GeminiEnterpriseLookalike";
+import { CustomerDashboardPage } from "@/customer/pages/CustomerDashboardPage";
+import { CustomerSessionProvider } from "@/customer/hooks/useCustomerSession";
 import { TelemetryPage } from "@/telemetry/pages/TelemetryPage";
 import { PartnerHomePage } from "@/partner-home/pages/PartnerHomePage";
 import { FundingPage } from "@/partner-home/pages/FundingPage";
@@ -69,6 +71,15 @@ export default function App() {
           <Route path="/" element={<PartnerHomePage />} />
           <Route path="/funding" element={<FundingPage />} />
           <Route path="/customer" element={<GeminiEnterpriseLookalike />} />
+          <Route
+            element={
+              <CustomerSessionProvider>
+                <Outlet />
+              </CustomerSessionProvider>
+            }
+          >
+            <Route path="/customer/dashboard" element={<CustomerDashboardPage />} />
+          </Route>
           <Route path="/telemetry" element={<TelemetryPage />} />
           <Route element={<V1Shell />}>
             <Route path="/v1" element={<LandingPage />} />

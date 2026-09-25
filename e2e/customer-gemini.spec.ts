@@ -21,44 +21,21 @@ test.describe("Customer Gemini Enterprise entry", () => {
     await expect(page.getByRole("dialog")).toBeHidden();
   });
 
-  test("modal routes to use-case draft at intake", async ({ page }) => {
+  // Modal now lands on /customer/dashboard (Task 5). Deep produce-artifacts e2e is Task 7.
+  test("modal routes draft chooser to customer dashboard", async ({ page }) => {
     await page.getByTestId("build-business-case").click();
     await page.getByTestId("choose-use-case-draft").click();
-    await expect(page).toHaveURL(/\/customer\/use-case-draft/);
-    await expect(page.getByRole("heading", { name: "Sign in to build your business case" })).toBeVisible();
-    await expect(page.getByText("partner workspace")).toHaveCount(0);
-    await page.getByTestId("google-demo-signin").click();
-    await expect(page.getByTestId("conversational-intake")).toBeVisible();
-    await expect(page.getByText(/pull LinkedIn context/i)).toBeVisible();
-    await expect(page.getByText(/Plan generation/i)).toHaveCount(0);
-    await expect
-      .poll(() =>
-        page.evaluate(() => {
-          const raw = localStorage.getItem("hackathon-use-case-draft-customer-v1");
-          return raw ? JSON.parse(raw).phase : null;
-        }),
-      )
-      .toBe("intake");
+    await expect(page).toHaveURL(/\/customer\/dashboard/);
+    await expect(page.getByTestId("customer-dashboard")).toBeVisible();
+    await expect(page.getByTestId("pcm-telemetry")).toHaveCount(0);
   });
 
-  test("modal routes to ghost ledger at intake", async ({ page }) => {
+  test("modal routes ledger chooser to customer dashboard", async ({ page }) => {
     await page.getByTestId("build-business-case").click();
     await page.getByTestId("choose-ghost-ledger").click();
-    await expect(page).toHaveURL(/\/customer\/ghost-ledger/);
-    await expect(page.getByRole("heading", { name: "Sign in to calculate the cost of waiting" })).toBeVisible();
-    await expect(page.getByText("partner workspace")).toHaveCount(0);
-    await page.getByTestId("google-demo-signin").click();
-    await expect(page.getByTestId("conversational-intake")).toBeVisible();
-    await expect(page.getByText(/LinkedIn lookup/i)).toBeVisible();
-    await expect(page.getByText(/Plan — cost of inaction/i)).toHaveCount(0);
-    await expect
-      .poll(() =>
-        page.evaluate(() => {
-          const raw = localStorage.getItem("ghost-ledger-customer-v1");
-          return raw ? JSON.parse(raw).phase : null;
-        }),
-      )
-      .toBe("intake");
+    await expect(page).toHaveURL(/\/customer\/dashboard/);
+    await expect(page.getByTestId("customer-dashboard")).toBeVisible();
+    await expect(page.getByTestId("pcm-telemetry")).toHaveCount(0);
   });
 
   test("customer draft starts fresh without overwriting partner storage", async ({ page }) => {
