@@ -59,6 +59,9 @@ export function TelemetryPage() {
             <p className="mt-1 max-w-2xl text-sm text-gray-600">{TELEMETRY_KPIS.cohortNote}</p>
           </div>
           <div className="flex flex-wrap gap-3 text-sm">
+            <Link to="/" className="text-[#1a73e8] hover:underline">
+              Home
+            </Link>
             <Link to="/hackathon" className="text-[#1a73e8] hover:underline">
               Use-Case Draft
             </Link>
