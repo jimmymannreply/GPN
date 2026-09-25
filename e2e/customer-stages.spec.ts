@@ -35,4 +35,52 @@ test.describe("Customer staged session entry", () => {
     await page.getByTestId("crm-next").click();
     await expect(page.getByTestId("stage-scope")).toBeVisible();
   });
+
+  test("produce artifacts opens draft plan board", async ({ page }) => {
+    await page.goto("/customer");
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "customer-staged-session-v1",
+        JSON.stringify({
+          format: "draft",
+          stage: "artifacts",
+          crmAccount: {
+            id: "crm-heartland-mutual",
+            company: "Heartland Mutual Insurance",
+            partnerOfRecord: "CDW",
+            industry: "Insurance",
+            segment: "Enterprise",
+          },
+          attendees: [
+            {
+              name: "Alex Chen",
+              role: "VP Ops",
+              linkedIn: {
+                headline: "VP",
+                title: "VP Ops",
+                company: "Heartland",
+                tenure: "3+",
+                focusAreas: ["AI"],
+                simulated: true,
+              },
+            },
+          ],
+          scope: {
+            painPoint: "Manual claims",
+            cxoOutcome: "Faster cycle",
+            constraints: "Q2",
+          },
+          fundingStatus: "Draft",
+          fundingValueLabel: "$7,750,000 / year",
+        })
+      );
+    });
+    await page.goto("/customer/session");
+    await expect(page.getByTestId("stage-artifacts")).toBeVisible();
+    await page.getByTestId("produce-artifacts").click();
+    await expect(page).toHaveURL(/\/customer\/use-case-draft/);
+    await page.getByTestId("google-demo-signin").click();
+    await expect(page.getByText(/Plan generation/i)).toBeVisible();
+    await expect(page.getByTestId("conversational-intake")).toHaveCount(0);
+  });
 });

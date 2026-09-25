@@ -30,6 +30,7 @@ export function JourneyPageHackathon({ customerMode = false }: { customerMode?: 
     setBrand,
     updateIntake,
     completeIntake,
+    seedFromCustomerSession,
     returnToIntake,
     startDraft,
     pickUseCase,
@@ -45,6 +46,18 @@ export function JourneyPageHackathon({ customerMode = false }: { customerMode?: 
   useEffect(() => {
     if (customerMode) setBrand("Google Cloud", "#1a73e8");
   }, [customerMode, setBrand]);
+
+  useEffect(() => {
+    if (!customerMode) return;
+    const raw = sessionStorage.getItem("customer-session-seed-v1");
+    if (!raw) return;
+    sessionStorage.removeItem("customer-session-seed-v1");
+    try {
+      seedFromCustomerSession(JSON.parse(raw));
+    } catch {
+      /* ignore */
+    }
+  }, [customerMode, seedFromCustomerSession]);
 
   useEffect(() => {
     const st = location.state as { forceIntake?: boolean } | null;

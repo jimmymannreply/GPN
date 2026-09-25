@@ -25,11 +25,23 @@ export function JourneyPageGhostLedger({ customerMode = false }: { customerMode?
   const navigate = useNavigate();
   const location = useLocation();
   const gl = useGhostLedger();
-  const { state, agentMessage, liveLossUsd, returnToIntake } = gl;
+  const { state, agentMessage, liveLossUsd, returnToIntake, seedFromCustomerSession } = gl;
 
   useEffect(() => {
     if (customerMode) gl.setBrand("Google Cloud", "#1a73e8");
   }, [customerMode, gl.setBrand]);
+
+  useEffect(() => {
+    if (!customerMode) return;
+    const raw = sessionStorage.getItem("customer-session-seed-v1");
+    if (!raw) return;
+    sessionStorage.removeItem("customer-session-seed-v1");
+    try {
+      seedFromCustomerSession(JSON.parse(raw));
+    } catch {
+      /* ignore */
+    }
+  }, [customerMode, seedFromCustomerSession]);
 
   useEffect(() => {
     const st = location.state as { forceIntake?: boolean } | null;

@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { CrmFindStep } from "@/customer/components/CrmFindStep";
 import { SessionStageStepper } from "@/customer/components/SessionStageStepper";
 import { useCustomerSession } from "@/customer/hooks/useCustomerSession";
 
 export function CustomerSessionPage() {
+  const navigate = useNavigate();
   const { state, setCrmAccount, setAttendees, updateScope, setStage } = useCustomerSession();
   const [roomAligned, setRoomAligned] = useState(false);
   const [ranksReady, setRanksReady] = useState(false);
@@ -13,6 +14,23 @@ export function CustomerSessionPage() {
     state.scope.painPoint.trim() &&
     state.scope.cxoOutcome.trim() &&
     state.scope.constraints.trim();
+
+  const produceArtifacts = () => {
+    setStage("artifacts");
+    const seed = {
+      customerName: state.crmAccount?.company ?? "Customer",
+      industryStack: state.crmAccount
+        ? `${state.crmAccount.industry} · ${state.crmAccount.segment}`
+        : "",
+      painPoint: state.scope.painPoint,
+      cxoOutcome: state.scope.cxoOutcome,
+      headcount: Math.max(state.attendees.length, 4),
+      attendees: state.attendees,
+    };
+    sessionStorage.setItem("customer-session-seed-v1", JSON.stringify(seed));
+    if (state.format === "draft") navigate("/customer/use-case-draft");
+    else navigate("/customer/ghost-ledger");
+  };
 
   return (
     <div className="min-h-screen bg-dl-page text-dl-text" data-testid="customer-session">
@@ -229,17 +247,17 @@ export function CustomerSessionPage() {
               <div>
                 <h2 className="text-lg font-semibold">Produce artifacts</h2>
                 <p className="mt-1 text-sm text-dl-text-secondary">
-                  Handoff into the {state.format === "ledger" ? "Ghost Ledger" : "Use-Case Draft"}{" "}
-                  board comes in the next task. Stub CTA for now.
+                  Hand off into the {state.format === "ledger" ? "Ghost Ledger" : "Use-Case Draft"}{" "}
+                  board with CRM and scope already applied — you land on plan, not intake.
                 </p>
               </div>
               <button
                 type="button"
-                className="rounded-dl border border-dl-border px-4 py-2 text-sm font-medium"
+                onClick={produceArtifacts}
+                className="rounded-dl bg-dl-brand px-4 py-2 text-sm font-medium text-white"
                 data-testid="produce-artifacts"
-                disabled
               >
-                Produce artifacts (coming next)
+                Produce artifacts
               </button>
             </div>
           )}

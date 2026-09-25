@@ -114,12 +114,22 @@ function participantNames(count: number): string[] {
   return roles.slice(0, Math.max(4, Math.min(count, roles.length)));
 }
 
+export interface CustomerSessionSeed {
+  customerName: string;
+  industryStack: string;
+  painPoint: string;
+  cxoOutcome: string;
+  headcount: number;
+  attendees: AttendeeProfile[];
+}
+
 interface HackathonContextValue {
   state: HackathonState;
   setUser: (user: GoogleUser | null) => void;
   setBrand: (name: string, accent?: string) => void;
   updateIntake: (patch: Partial<IntakeAnswers>) => void;
   completeIntake: () => void;
+  seedFromCustomerSession: (seed: CustomerSessionSeed) => void;
   returnToIntake: () => void;
   startDraft: () => void;
   pickUseCase: (useCaseId: string) => void;
@@ -228,6 +238,47 @@ export function HackathonDraftProvider({
             event: "intake.complete",
             at: new Date().toISOString(),
             detail: `${prev.intake.customerName} · ${industryLabel(industry)}`,
+          },
+        ].slice(-40),
+      };
+    });
+  }, []);
+
+  const seedFromCustomerSession = useCallback((seed: CustomerSessionSeed) => {
+    setState((prev) => {
+      const attendees = seed.attendees ?? [];
+      const headcount = Math.max(attendees.length, seed.headcount || 4);
+      const intake: IntakeAnswers = {
+        customerName: seed.customerName,
+        industryStack: seed.industryStack,
+        painPoint: seed.painPoint,
+        cxoOutcome: seed.cxoOutcome,
+        headcount,
+        attendees,
+      };
+      const { industry, industryPhrase, pool } = tailorUseCasePool(intake);
+      const participants =
+        attendees.length > 0
+          ? attendees.map((attendee) => `${attendee.name} (${attendee.role})`)
+          : participantNames(headcount);
+      const snakeOrder = buildDraftSnakeOrder(participants.length, pool.length);
+      return {
+        ...prev,
+        phase: "plan",
+        intake,
+        curatedIndustry: industry,
+        curatedIndustryPhrase: industryPhrase,
+        pool,
+        participants,
+        snakeOrder,
+        draftIndex: 0,
+        picks: [],
+        telemetry: [
+          ...prev.telemetry,
+          {
+            event: "intake.seed",
+            at: new Date().toISOString(),
+            detail: `${intake.customerName} · ${industryLabel(industry)}`,
           },
         ].slice(-40),
       };
@@ -383,6 +434,7 @@ export function HackathonDraftProvider({
     setBrand,
     updateIntake,
     completeIntake,
+    seedFromCustomerSession,
     returnToIntake,
     startDraft,
     pickUseCase,

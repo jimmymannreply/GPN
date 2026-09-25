@@ -14,6 +14,7 @@ import {
   type FreezeOption,
   type LedgerIntake,
 } from "@/ghost-ledger/data/costModel";
+import type { AttendeeProfile } from "@/shared/attendees/types";
 
 const PARTNER_STORAGE_KEY = "ghost-ledger-hackathon-v1";
 const CUSTOMER_STORAGE_KEY = "ghost-ledger-customer-v1";
@@ -83,12 +84,22 @@ const initialState: GhostState = {
   telemetry: [],
 };
 
+export interface CustomerSessionSeed {
+  customerName: string;
+  industryStack: string;
+  painPoint: string;
+  cxoOutcome: string;
+  headcount: number;
+  attendees: AttendeeProfile[];
+}
+
 interface GhostContextValue {
   state: GhostState;
   setUser: (user: GoogleUser | null) => void;
   setBrand: (name: string, accent?: string) => void;
   updateIntake: (patch: Partial<LedgerIntake>) => void;
   completeIntake: () => void;
+  seedFromCustomerSession: (seed: CustomerSessionSeed) => void;
   returnToIntake: () => void;
   startRun: () => void;
   freezeLedger: (optionId: string) => void;
@@ -179,6 +190,49 @@ export function GhostLedgerProvider({
             event: "intake.complete",
             at: new Date().toISOString(),
             detail: prev.intake.customerName,
+          },
+        ].slice(-40),
+      };
+    });
+  }, []);
+
+  const seedFromCustomerSession = useCallback((seed: CustomerSessionSeed) => {
+    setState((prev) => {
+      const attendees = seed.attendees ?? [];
+      const intake: LedgerIntake = {
+        customerName: seed.customerName,
+        industryStack: seed.industryStack,
+        headcount: Math.max(attendees.length, seed.headcount || 3),
+        attendees,
+        monthlyToolSpend: 45000,
+        ticketsPerMonth: 800,
+        minutesPerTicket: 12,
+        hoursLostPerWeek: 40,
+        hourlyLoadedCost: 85,
+        monthlyChurnRevenue: 25000,
+      };
+      const breakdown = computeCostOfInaction(intake);
+      const freezeOptions = buildFreezeOptions(intake);
+      return {
+        ...prev,
+        phase: "plan",
+        intake,
+        breakdown,
+        freezeOptions,
+        runStartedAt: null,
+        elapsedSeconds: 0,
+        frozen: false,
+        frozenAtSeconds: 0,
+        frozenLossUsd: 0,
+        selectedFreezeId: null,
+        committedMonthlySavings: 0,
+        dafSubmitted: false,
+        telemetry: [
+          ...prev.telemetry,
+          {
+            event: "intake.seed",
+            at: new Date().toISOString(),
+            detail: intake.customerName,
           },
         ].slice(-40),
       };
@@ -309,6 +363,7 @@ export function GhostLedgerProvider({
     setBrand,
     updateIntake,
     completeIntake,
+    seedFromCustomerSession,
     returnToIntake,
     startRun,
     freezeLedger,
