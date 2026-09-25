@@ -21,6 +21,7 @@ import { LandingPageGhostLedger } from "@/ghost-ledger/pages/LandingPageGhostLed
 import { JourneyPageGhostLedger } from "@/ghost-ledger/pages/JourneyPageGhostLedger";
 import { GeminiEnterpriseLookalike } from "@/customer/pages/GeminiEnterpriseLookalike";
 import { TelemetryPage } from "@/telemetry/pages/TelemetryPage";
+import { PartnerHomePage } from "@/partner-home/pages/PartnerHomePage";
 
 const basename =
   import.meta.env.BASE_URL === "/" ? undefined : import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -64,10 +65,11 @@ export default function App() {
     <SpeechProvider>
       <BrowserRouter basename={basename}>
         <Routes>
+          <Route path="/" element={<PartnerHomePage />} />
           <Route path="/customer" element={<GeminiEnterpriseLookalike />} />
           <Route path="/telemetry" element={<TelemetryPage />} />
           <Route element={<V1Shell />}>
-            <Route path="/" element={<LandingPage />} />
+            <Route path="/v1" element={<LandingPage />} />
             <Route path="/partner" element={<MockPartnerPage />} />
             <Route path="/journey" element={<JourneyPage />} />
             <Route path="/consent" element={<ConsentPage />} />
