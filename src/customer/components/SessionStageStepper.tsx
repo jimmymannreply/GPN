@@ -5,7 +5,7 @@ const STEPS: { id: SessionStage; label: string }[] = [
   { id: "scope", label: "Scope" },
   { id: "plan", label: "Plan" },
   { id: "run", label: "Run" },
-  { id: "artifacts", label: "Produce artifacts" },
+  { id: "artifacts", label: "Next steps" },
 ];
 
 const order: SessionStage[] = ["crm", "scope", "plan", "run", "artifacts", "complete"];

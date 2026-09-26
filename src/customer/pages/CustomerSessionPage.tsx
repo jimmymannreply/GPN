@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CrmFindStep } from "@/customer/components/CrmFindStep";
+import { NextActionsPanel } from "@/customer/components/NextActionsPanel";
 import { SessionStageStepper } from "@/customer/components/SessionStageStepper";
 import { useCustomerSession } from "@/customer/hooks/useCustomerSession";
 
@@ -42,7 +43,7 @@ export function CustomerSessionPage() {
             </p>
             <h1 className="mt-2 text-3xl font-semibold">Value session</h1>
             <p className="mt-2 max-w-2xl text-sm text-dl-text-secondary">
-              Walk CRM → Scope → Plan → Run, then hand off to produce artifacts.
+              Walk CRM → Scope → Plan → Run, then choose next actions.
             </p>
             <div className="mt-4">
               <SessionStageStepper stage={state.stage} />
@@ -193,7 +194,7 @@ export function CustomerSessionPage() {
                     className="rounded-dl bg-dl-brand px-4 py-2 text-sm font-medium text-white"
                     data-testid="run-open-ledger"
                   >
-                    Open live ledger run
+                    Finish run → next steps
                   </button>
                 </>
               ) : (
@@ -235,7 +236,7 @@ export function CustomerSessionPage() {
                     className="rounded-dl bg-dl-brand px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
                     data-testid="run-continue"
                   >
-                    Continue to produce artifacts
+                    Finish run → next steps
                   </button>
                 </>
               )}
@@ -243,23 +244,7 @@ export function CustomerSessionPage() {
           )}
 
           {(state.stage === "artifacts" || state.stage === "complete") && (
-            <div className="space-y-4" data-testid="stage-artifacts">
-              <div>
-                <h2 className="text-lg font-semibold">Produce artifacts</h2>
-                <p className="mt-1 text-sm text-dl-text-secondary">
-                  Hand off into the {state.format === "ledger" ? "Ghost Ledger" : "Use-Case Draft"}{" "}
-                  board with CRM and scope already applied — you land on plan, not intake.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={produceArtifacts}
-                className="rounded-dl bg-dl-brand px-4 py-2 text-sm font-medium text-white"
-                data-testid="produce-artifacts"
-              >
-                Produce artifacts
-              </button>
-            </div>
+            <NextActionsPanel format={state.format} onProduceArtifacts={produceArtifacts} />
           )}
         </section>
       </main>

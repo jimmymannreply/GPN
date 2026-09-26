@@ -3,14 +3,16 @@ import { test, expect } from "@playwright/test";
 test.describe("Customer staged session entry", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/customer");
-    await page.evaluate(() => localStorage.clear());
+    await page.evaluate(() => {
+      localStorage.clear();
+      sessionStorage.clear();
+    });
     await page.goto("/customer");
   });
 
   test("campaign chooser lands on customer dashboard", async ({ page }) => {
     await page.getByTestId("build-business-case").click();
     await page.getByTestId("choose-use-case-draft").click();
-    await page.getByTestId("next-partner-session").click();
     await expect(page).toHaveURL(/\/customer\/dashboard/);
     await expect(page.getByTestId("customer-dashboard")).toBeVisible();
     await expect(page.getByTestId("pcm-telemetry")).toHaveCount(0);
@@ -19,7 +21,6 @@ test.describe("Customer staged session entry", () => {
   test("ledger chooser lands on customer dashboard", async ({ page }) => {
     await page.getByTestId("build-business-case").click();
     await page.getByTestId("choose-ghost-ledger").click();
-    await page.getByTestId("next-partner-session").click();
     await expect(page).toHaveURL(/\/customer\/dashboard/);
     await expect(page.getByTestId("customer-dashboard")).toBeVisible();
     await expect(page.getByTestId("session-format")).toHaveText("Ghost ledger");
@@ -29,7 +30,6 @@ test.describe("Customer staged session entry", () => {
   test("CRM pick advances to scope", async ({ page }) => {
     await page.getByTestId("build-business-case").click();
     await page.getByTestId("choose-use-case-draft").click();
-    await page.getByTestId("next-partner-session").click();
     await page.getByTestId("continue-session").click();
     await expect(page).toHaveURL(/\/customer\/session/);
     await expect(page.getByTestId("customer-session")).toBeVisible();
@@ -75,11 +75,12 @@ test.describe("Customer staged session entry", () => {
           },
           fundingStatus: "Draft",
           fundingValueLabel: "$7,750,000 / year",
-        })
+        }),
       );
     });
     await page.goto("/customer/session");
     await expect(page.getByTestId("stage-artifacts")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "What should we do next?" })).toBeVisible();
     await page.getByTestId("produce-artifacts").click();
     await expect(page).toHaveURL(/\/customer\/use-case-draft/);
     await page.getByTestId("google-demo-signin").click();

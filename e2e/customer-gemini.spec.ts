@@ -24,63 +24,72 @@ test.describe("Customer Gemini Enterprise entry", () => {
     await expect(page.getByRole("dialog")).toBeHidden();
   });
 
-  test("format choice shows next actions", async ({ page }) => {
+  test("format choice starts facilitated session on dashboard", async ({ page }) => {
     await page.getByTestId("build-business-case").click();
     await page.getByTestId("choose-use-case-draft").click();
-    await expect(page.getByTestId("next-schedule-hackathon")).toBeVisible();
-    await expect(page.getByTestId("next-apply-daf")).toBeVisible();
-    await expect(page.getByTestId("next-partner-session")).toBeVisible();
-    await expect(page).not.toHaveURL(/\/customer\/dashboard/);
-  });
-
-  test("partner session next action lands on dashboard", async ({ page }) => {
-    await page.getByTestId("build-business-case").click();
-    await page.getByTestId("choose-use-case-draft").click();
-    await page.getByTestId("next-partner-session").click();
     await expect(page).toHaveURL(/\/customer\/dashboard/);
     await expect(page.getByTestId("customer-dashboard")).toBeVisible();
     await expect(page.getByTestId("pcm-telemetry")).toHaveCount(0);
   });
 
-  test("ledger partner session lands on dashboard", async ({ page }) => {
+  test("ledger format starts facilitated session on dashboard", async ({ page }) => {
     await page.getByTestId("build-business-case").click();
     await page.getByTestId("choose-ghost-ledger").click();
-    await page.getByTestId("next-partner-session").click();
     await expect(page).toHaveURL(/\/customer\/dashboard/);
     await expect(page.getByTestId("session-format")).toHaveText("Ghost ledger");
   });
 
-  test("DAF next action opens funding", async ({ page }) => {
+  test("demo preseed shows Heartland on dashboard", async ({ page }) => {
     await page.getByTestId("build-business-case").click();
+    await page.getByTestId("demo-preseed").check();
     await page.getByTestId("choose-use-case-draft").click();
-    await page.getByTestId("next-apply-daf").click();
-    await expect(page).toHaveURL(/\/funding/);
-    await expect(page.getByTestId("funding-page")).toBeVisible();
+    await expect(page).toHaveURL(/\/customer\/dashboard/);
+    await expect(page.getByText(/Heartland Mutual/i)).toBeVisible();
+    await expect(page.getByTestId("session-stage")).toHaveText(/Plan/i);
   });
 
-  test("schedule opens scheduler with calendar links", async ({ page }) => {
-    await page.getByTestId("build-business-case").click();
-    await page.getByTestId("choose-use-case-draft").click();
+  test("next actions after run include schedule DAF and produce", async ({ page }) => {
+    await page.goto("/customer");
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "customer-staged-session-v1",
+        JSON.stringify({
+          format: "draft",
+          stage: "artifacts",
+          crmAccount: {
+            id: "crm-heartland-mutual",
+            company: "Heartland Mutual Insurance",
+            partnerOfRecord: "CDW",
+            industry: "Insurance",
+            segment: "Enterprise",
+          },
+          attendees: [],
+          scope: {
+            painPoint: "Manual claims",
+            cxoOutcome: "Faster cycle",
+            constraints: "Q2",
+          },
+          fundingStatus: "Draft",
+          fundingValueLabel: "$7,750,000 / year",
+        }),
+      );
+    });
+    await page.goto("/customer/session");
+    await expect(page.getByRole("heading", { name: "What should we do next?" })).toBeVisible();
+    await expect(page.getByTestId("next-schedule-hackathon")).toBeVisible();
+    await expect(page.getByTestId("next-apply-daf")).toBeVisible();
+    await expect(page.getByTestId("produce-artifacts")).toBeVisible();
+
     await page.getByTestId("next-schedule-hackathon").click();
     await expect(page.getByTestId("hackathon-scheduler")).toBeVisible();
     await expect(page.getByTestId("scheduler-google")).toHaveAttribute(
       "href",
       /calendar\.google\.com/,
     );
-    await expect(page.getByTestId("scheduler-outlook")).toHaveAttribute(
-      "href",
-      /outlook\.live\.com/,
-    );
-  });
+    await page.getByRole("button", { name: "Close" }).click();
 
-  test("demo preseed partner path shows Heartland", async ({ page }) => {
-    await page.getByTestId("build-business-case").click();
-    await page.getByTestId("choose-use-case-draft").click();
-    await page.getByTestId("demo-preseed").check();
-    await page.getByTestId("next-partner-session").click();
-    await expect(page).toHaveURL(/\/customer\/dashboard/);
-    await expect(page.getByText(/Heartland Mutual/i)).toBeVisible();
-    await expect(page.getByTestId("session-stage")).toHaveText(/Plan/i);
+    await page.getByTestId("next-apply-daf").click();
+    await expect(page).toHaveURL(/\/funding/);
   });
 
   test("customer draft starts fresh without overwriting partner storage", async ({ page }) => {

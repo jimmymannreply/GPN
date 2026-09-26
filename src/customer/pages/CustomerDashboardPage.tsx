@@ -16,7 +16,7 @@ function stageLabel(stage: SessionStage): string {
     scope: "Scope",
     plan: "Plan",
     run: "Run",
-    artifacts: "Produce artifacts",
+    artifacts: "Next steps",
     complete: "Complete",
   };
   return labels[stage];
