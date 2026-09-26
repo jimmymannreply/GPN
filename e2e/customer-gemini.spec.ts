@@ -74,9 +74,9 @@ test.describe("Customer Gemini Enterprise entry", () => {
   });
 
   test("demo preseed partner path shows Heartland", async ({ page }) => {
-    await page.getByTestId("demo-preseed").check();
     await page.getByTestId("build-business-case").click();
     await page.getByTestId("choose-use-case-draft").click();
+    await page.getByTestId("demo-preseed").check();
     await page.getByTestId("next-partner-session").click();
     await expect(page).toHaveURL(/\/customer\/dashboard/);
     await expect(page.getByText(/Heartland Mutual/i)).toBeVisible();

@@ -4,6 +4,7 @@ import { HackathonSchedulerModal } from "@/customer/components/HackathonSchedule
 import {
   applyDemoPreseed,
   isDemoPreseedEnabled,
+  setDemoPreseedEnabled,
 } from "@/customer/data/demoPreseed";
 import type { SessionFormat } from "@/customer/hooks/useCustomerSession";
 
@@ -18,6 +19,7 @@ export function BusinessCaseModal({
   const [step, setStep] = useState<"format" | "next">("format");
   const [format, setFormat] = useState<SessionFormat>("draft");
   const [schedulerOpen, setSchedulerOpen] = useState(false);
+  const [demoPreseed, setDemoPreseed] = useState(() => isDemoPreseedEnabled());
 
   useEffect(() => {
     if (!open) {
@@ -25,6 +27,7 @@ export function BusinessCaseModal({
       setSchedulerOpen(false);
       return;
     }
+    setDemoPreseed(isDemoPreseedEnabled());
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         if (schedulerOpen) setSchedulerOpen(false);
@@ -124,7 +127,23 @@ export function BusinessCaseModal({
                 </strong>
                 . Pick a next action.
               </p>
-              <div className="mt-6 grid gap-3">
+              <label className="mt-4 flex cursor-pointer items-start gap-2 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-3 py-3 text-sm text-gray-600">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={demoPreseed}
+                  onChange={(e) => {
+                    setDemoPreseed(e.target.checked);
+                    setDemoPreseedEnabled(e.target.checked);
+                  }}
+                  data-testid="demo-preseed"
+                />
+                <span>
+                  <span className="font-medium text-gray-800">Demo:</span> pre-fill customer data
+                  (Heartland Mutual) for a faster walkthrough
+                </span>
+              </label>
+              <div className="mt-4 grid gap-3">
                 <button
                   type="button"
                   data-testid="next-schedule-hackathon"
