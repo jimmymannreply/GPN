@@ -3,7 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { CrmFindStep } from "@/customer/components/CrmFindStep";
 import { NextActionsPanel } from "@/customer/components/NextActionsPanel";
 import { SessionStageStepper } from "@/customer/components/SessionStageStepper";
+import { scopeFromCrmAccount } from "@/customer/data/mockCrm";
 import { useCustomerSession } from "@/customer/hooks/useCustomerSession";
+import type { CrmAccount } from "@/customer/hooks/useCustomerSession";
 
 export function CustomerSessionPage() {
   const navigate = useNavigate();
@@ -61,7 +63,10 @@ export function CustomerSessionPage() {
             <CrmFindStep
               selectedAccount={state.crmAccount}
               attendees={state.attendees}
-              onSelectAccount={setCrmAccount}
+              onSelectAccount={(account: CrmAccount) => {
+                setCrmAccount(account);
+                updateScope(scopeFromCrmAccount(account));
+              }}
               onAttendeesChange={setAttendees}
               onNext={() => {
                 if (!state.crmAccount) return;
@@ -75,7 +80,8 @@ export function CustomerSessionPage() {
               <div>
                 <h2 className="text-lg font-semibold">Scope the engagement</h2>
                 <p className="mt-1 text-sm text-dl-text-secondary">
-                  Capture pain, the CXO outcome, and hard constraints.
+                  Prefills from the CRM account when available — edit or extend anything before
+                  you continue.
                 </p>
               </div>
               <label className="block text-sm">

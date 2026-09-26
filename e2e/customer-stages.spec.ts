@@ -34,9 +34,36 @@ test.describe("Customer staged session entry", () => {
     await expect(page).toHaveURL(/\/customer\/session/);
     await expect(page.getByTestId("customer-session")).toBeVisible();
     await expect(page.getByTestId("stage-crm")).toBeVisible();
-    await page.getByTestId(/^crm-pick-/).first().click();
+    await expect(page.getByTestId("crm-customer-lookup-hint")).toBeVisible();
+    await page.getByTestId("crm-search").fill("Heartland");
+    await page.getByTestId("crm-pick-crm-heartland-mutual").click();
     await page.getByTestId("crm-next").click();
     await expect(page.getByTestId("stage-scope")).toBeVisible();
+    await expect(page.getByTestId("scope-pain")).toHaveValue(/Claims intake/i);
+    await expect(page.getByTestId("scope-outcome")).toHaveValue(/cycle time/i);
+    await page.getByTestId("scope-pain").fill("Claims intake sits days — plus seasonal surge.");
+    await expect(page.getByTestId("scope-pain")).toHaveValue(/seasonal surge/);
+  });
+
+  test("Google CRM audience lists all partners", async ({ page }) => {
+    await page.getByTestId("build-business-case").click();
+    await page.getByTestId("choose-use-case-draft").click();
+    await page.getByTestId("continue-session").click();
+    await page.getByTestId("crm-audience-google").click();
+    await expect(page.getByTestId("crm-account-list")).toBeVisible();
+    await expect(page.getByTestId("crm-pick-crm-heartland-mutual")).toBeVisible();
+    await expect(page.getByTestId("crm-pick-crm-northwind-health")).toBeVisible();
+    await expect(page.getByTestId("crm-pick-crm-contoso-retail")).toBeVisible();
+  });
+
+  test("Partner CRM audience filters to one partner", async ({ page }) => {
+    await page.getByTestId("build-business-case").click();
+    await page.getByTestId("choose-use-case-draft").click();
+    await page.getByTestId("continue-session").click();
+    await page.getByTestId("crm-audience-partner").click();
+    await page.getByTestId("crm-partner-select").selectOption("Softchoice");
+    await expect(page.getByTestId("crm-pick-crm-northwind-health")).toBeVisible();
+    await expect(page.getByTestId("crm-pick-crm-heartland-mutual")).toHaveCount(0);
   });
 
   test("produce artifacts opens draft plan board", async ({ page }) => {

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { setCrmAudienceCustomer } from "@/customer/data/crmAudience";
 import {
   applyDemoPreseed,
   isDemoPreseedEnabled,
@@ -30,6 +31,7 @@ export function BusinessCaseModal({
   if (!open) return null;
 
   const startFacilitatedSession = (format: SessionFormat) => {
+    setCrmAudienceCustomer();
     if (demoPreseed || isDemoPreseedEnabled()) {
       setDemoPreseedEnabled(true);
       applyDemoPreseed(format);

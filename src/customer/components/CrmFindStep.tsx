@@ -1,10 +1,27 @@
 import { useMemo, useState, type FormEvent } from "react";
+import {
+  CRM_PARTNERS,
+  type CrmAudience,
+  type PartnerOfRecord,
+  readCrmAudienceState,
+  writeCrmAudienceState,
+} from "@/customer/data/crmAudience";
 import { MOCK_CRM_ACCOUNTS } from "@/customer/data/mockCrm";
 import type { CrmAccount } from "@/customer/hooks/useCustomerSession";
 import { simulateLinkedInProfile } from "@/shared/attendees/simulateLinkedIn";
 import type { AttendeeProfile } from "@/shared/attendees/types";
 
 const MAX_ATTENDEES = 3;
+
+function audienceHelp(audience: CrmAudience, partner: PartnerOfRecord): string {
+  if (audience === "google") {
+    return "Google view: all partner customers across Softchoice, CDW, and SHI.";
+  }
+  if (audience === "partner") {
+    return `Partner view (${partner}): only your book of business.`;
+  }
+  return "Look up your company to find your account, or add it if you are new. Full account lists are not shown.";
+}
 
 export function CrmFindStep({
   selectedAccount,
@@ -19,28 +36,54 @@ export function CrmFindStep({
   onAttendeesChange: (attendees: AttendeeProfile[]) => void;
   onNext: () => void;
 }) {
+  const initial = readCrmAudienceState();
+  const [audience, setAudience] = useState<CrmAudience>(initial.audience);
+  const [partnerOfRecord, setPartnerOfRecord] = useState<PartnerOfRecord>(initial.partnerOfRecord);
   const [query, setQuery] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [addForm, setAddForm] = useState({
     company: "",
-    partnerOfRecord: "CDW",
+    partnerOfRecord: initial.partnerOfRecord,
     industry: "",
     segment: "Enterprise",
   });
   const [attendeeName, setAttendeeName] = useState("");
   const [attendeeRole, setAttendeeRole] = useState("");
 
+  const persistAudience = (next: CrmAudience, partner: PartnerOfRecord) => {
+    setAudience(next);
+    setPartnerOfRecord(partner);
+    writeCrmAudienceState({ audience: next, partnerOfRecord: partner });
+  };
+
+  const visiblePool = useMemo(() => {
+    if (audience === "partner") {
+      return MOCK_CRM_ACCOUNTS.filter((a) => a.partnerOfRecord === partnerOfRecord);
+    }
+    return MOCK_CRM_ACCOUNTS;
+  }, [audience, partnerOfRecord]);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return MOCK_CRM_ACCOUNTS;
-    return MOCK_CRM_ACCOUNTS.filter(
+    // Customer: lookup only — require a search string; never browse the full directory.
+    if (audience === "customer") {
+      if (q.length < 2) return [];
+      return visiblePool.filter(
+        (a) =>
+          a.company.toLowerCase().includes(q) ||
+          a.industry.toLowerCase().includes(q) ||
+          a.segment.toLowerCase().includes(q),
+      );
+    }
+    if (!q) return visiblePool;
+    return visiblePool.filter(
       (a) =>
         a.company.toLowerCase().includes(q) ||
         a.partnerOfRecord.toLowerCase().includes(q) ||
         a.industry.toLowerCase().includes(q) ||
-        a.segment.toLowerCase().includes(q)
+        a.segment.toLowerCase().includes(q),
     );
-  }, [query]);
+  }, [audience, query, visiblePool]);
 
   const pickAccount = (account: CrmAccount) => {
     onSelectAccount(account);
@@ -59,7 +102,12 @@ export function CrmFindStep({
       segment: addForm.segment.trim() || "Commercial",
     };
     pickAccount(account);
-    setAddForm({ company: "", partnerOfRecord: "CDW", industry: "", segment: "Enterprise" });
+    setAddForm({
+      company: "",
+      partnerOfRecord: partnerOfRecord,
+      industry: "",
+      segment: "Enterprise",
+    });
   };
 
   const addAttendee = (e: FormEvent) => {
@@ -78,9 +126,57 @@ export function CrmFindStep({
     <div className="space-y-6" data-testid="stage-crm">
       <div>
         <h2 className="text-lg font-semibold">Find CRM account</h2>
-        <p className="mt-1 text-sm text-dl-text-secondary">
-          Search simulated Softchoice, CDW, and SHI accounts, or add one for this demo.
+        <p className="mt-1 text-sm text-dl-text-secondary" data-testid="crm-audience-help">
+          {audienceHelp(audience, partnerOfRecord)}
         </p>
+      </div>
+
+      <div
+        className="flex flex-wrap items-center gap-2"
+        data-testid="crm-audience-switcher"
+        role="group"
+        aria-label="CRM audience"
+      >
+        {(
+          [
+            ["google", "Google"],
+            ["partner", "Partner"],
+            ["customer", "Customer"],
+          ] as const
+        ).map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => persistAudience(id, partnerOfRecord)}
+            className={`rounded-dl border px-3 py-1.5 text-sm ${
+              audience === id
+                ? "border-dl-brand bg-dl-brand/10 font-medium text-dl-brand"
+                : "border-dl-border bg-dl-page"
+            }`}
+            data-testid={`crm-audience-${id}`}
+          >
+            {label}
+          </button>
+        ))}
+        {audience === "partner" && (
+          <select
+            value={partnerOfRecord}
+            onChange={(e) => {
+              const partner = e.target.value as PartnerOfRecord;
+              persistAudience("partner", partner);
+              setAddForm((f) => ({ ...f, partnerOfRecord: partner }));
+            }}
+            className="rounded-dl border border-dl-border bg-dl-page px-3 py-1.5 text-sm"
+            data-testid="crm-partner-select"
+            aria-label="Partner of record filter"
+          >
+            {CRM_PARTNERS.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-3">
@@ -88,7 +184,11 @@ export function CrmFindStep({
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search company, partner, industry…"
+          placeholder={
+            audience === "customer"
+              ? "Look up your company name…"
+              : "Search company, partner, industry…"
+          }
           className="min-w-[16rem] flex-1 rounded-dl border border-dl-border bg-dl-page px-3 py-2 text-sm"
           data-testid="crm-search"
           aria-label="Search CRM accounts"
@@ -120,11 +220,22 @@ export function CrmFindStep({
           </label>
           <label className="text-sm">
             <span className="text-dl-text-secondary">Partner of record</span>
-            <input
+            <select
               value={addForm.partnerOfRecord}
-              onChange={(e) => setAddForm((f) => ({ ...f, partnerOfRecord: e.target.value }))}
+              onChange={(e) =>
+                setAddForm((f) => ({
+                  ...f,
+                  partnerOfRecord: e.target.value as PartnerOfRecord,
+                }))
+              }
               className="mt-1 w-full rounded-dl border border-dl-border bg-dl-surface px-3 py-2"
-            />
+            >
+              {CRM_PARTNERS.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
           </label>
           <label className="text-sm">
             <span className="text-dl-text-secondary">Industry</span>
@@ -154,35 +265,49 @@ export function CrmFindStep({
         </form>
       )}
 
-      <ul className="grid gap-2">
-        {filtered.map((account) => {
-          const selected = selectedAccount?.id === account.id;
-          return (
-            <li key={account.id}>
-              <button
-                type="button"
-                onClick={() => pickAccount(account)}
-                className={`w-full rounded-dl border p-4 text-left transition ${
-                  selected
-                    ? "border-dl-brand bg-dl-brand/10 shadow-stage-active"
-                    : "border-dl-border bg-dl-surface hover:border-dl-brand/40"
-                }`}
-                data-testid={`crm-pick-${account.id}`}
-              >
-                <p className="text-sm font-semibold">{account.company}</p>
-                <p className="mt-1 text-xs text-dl-text-secondary">
-                  {account.partnerOfRecord} · {account.industry} · {account.segment}
-                </p>
-              </button>
+      {audience === "customer" && query.trim().length < 2 && !selectedAccount && (
+        <p
+          className="rounded-dl border border-dashed border-dl-border p-4 text-sm text-dl-text-secondary"
+          data-testid="crm-customer-lookup-hint"
+        >
+          Type at least 2 characters to look up your account. You can also add your account if it is
+          not found.
+        </p>
+      )}
+
+      {(audience !== "customer" || query.trim().length >= 2) && (
+        <ul className="grid gap-2" data-testid="crm-account-list">
+          {filtered.map((account) => {
+            const selected = selectedAccount?.id === account.id;
+            return (
+              <li key={account.id}>
+                <button
+                  type="button"
+                  onClick={() => pickAccount(account)}
+                  className={`w-full rounded-dl border p-4 text-left transition ${
+                    selected
+                      ? "border-dl-brand bg-dl-brand/10 shadow-stage-active"
+                      : "border-dl-border bg-dl-surface hover:border-dl-brand/40"
+                  }`}
+                  data-testid={`crm-pick-${account.id}`}
+                >
+                  <p className="text-sm font-semibold">{account.company}</p>
+                  <p className="mt-1 text-xs text-dl-text-secondary">
+                    {account.partnerOfRecord} · {account.industry} · {account.segment}
+                  </p>
+                </button>
+              </li>
+            );
+          })}
+          {filtered.length === 0 && (
+            <li className="rounded-dl border border-dashed border-dl-border p-4 text-sm text-dl-text-secondary">
+              {audience === "customer"
+                ? "No match. Try another name or add your account."
+                : "No accounts match. Try another search or add an account."}
             </li>
-          );
-        })}
-        {filtered.length === 0 && (
-          <li className="rounded-dl border border-dashed border-dl-border p-4 text-sm text-dl-text-secondary">
-            No accounts match. Try another search or add an account.
-          </li>
-        )}
-      </ul>
+          )}
+        </ul>
+      )}
 
       {selectedAccount && (
         <section className="space-y-4 rounded-dl border border-dl-border bg-dl-page p-4" data-testid="crm-attendees">
