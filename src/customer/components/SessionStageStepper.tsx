@@ -2,13 +2,22 @@ import type { SessionStage } from "@/customer/hooks/useCustomerSession";
 
 const STEPS: { id: SessionStage; label: string }[] = [
   { id: "crm", label: "CRM" },
+  { id: "intake", label: "Intake" },
   { id: "scope", label: "Scope" },
   { id: "plan", label: "Plan" },
   { id: "run", label: "Run" },
   { id: "artifacts", label: "Next steps" },
 ];
 
-const order: SessionStage[] = ["crm", "scope", "plan", "run", "artifacts", "complete"];
+const order: SessionStage[] = [
+  "crm",
+  "intake",
+  "scope",
+  "plan",
+  "run",
+  "artifacts",
+  "complete",
+];
 
 export function SessionStageStepper({ stage }: { stage: SessionStage }) {
   const activeIndex = order.indexOf(stage);

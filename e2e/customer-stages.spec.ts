@@ -27,43 +27,40 @@ test.describe("Customer staged session entry", () => {
     await expect(page.getByTestId("pcm-telemetry")).toHaveCount(0);
   });
 
-  test("CRM pick advances to scope", async ({ page }) => {
+  test("CRM demo pick goes to intake then scope with prefill", async ({ page }) => {
     await page.getByTestId("build-business-case").click();
     await page.getByTestId("choose-use-case-draft").click();
     await page.getByTestId("continue-session").click();
     await expect(page).toHaveURL(/\/customer\/session/);
-    await expect(page.getByTestId("customer-session")).toBeVisible();
     await expect(page.getByTestId("stage-crm")).toBeVisible();
-    await expect(page.getByTestId("crm-customer-lookup-hint")).toBeVisible();
-    await page.getByTestId("crm-search").fill("Heartland");
-    await page.getByTestId("crm-pick-crm-heartland-mutual").click();
+    await expect(page.getByTestId("crm-demo-picks")).toBeVisible();
+    await expect(page.getByTestId("crm-audience-google")).toHaveCount(0);
+
+    await page.getByTestId("crm-demo-crm-heartland-mutual").click();
     await page.getByTestId("crm-next").click();
+    await expect(page.getByTestId("stage-intake")).toBeVisible();
+    await expect(page.getByTestId("conversational-intake")).toBeVisible();
+
+    await page.getByTestId("intake-skip-crm-defaults").click();
     await expect(page.getByTestId("stage-scope")).toBeVisible();
     await expect(page.getByTestId("scope-pain")).toHaveValue(/Claims intake/i);
-    await expect(page.getByTestId("scope-outcome")).toHaveValue(/cycle time/i);
     await page.getByTestId("scope-pain").fill("Claims intake sits days — plus seasonal surge.");
     await expect(page.getByTestId("scope-pain")).toHaveValue(/seasonal surge/);
+
+    await page.getByTestId("scope-next").click();
+    await expect(page.getByTestId("stage-plan")).toBeVisible();
+    await expect(page.getByTestId("plan-attendees")).toBeVisible();
+    await expect(page.getByTestId("plan-agenda")).toBeVisible();
+    await expect(page.getByText(/Michelle Dorsey/i)).toBeVisible();
   });
 
-  test("Google CRM audience lists all partners", async ({ page }) => {
+  test("CRM search lookup finds account", async ({ page }) => {
     await page.getByTestId("build-business-case").click();
     await page.getByTestId("choose-use-case-draft").click();
     await page.getByTestId("continue-session").click();
-    await page.getByTestId("crm-audience-google").click();
-    await expect(page.getByTestId("crm-account-list")).toBeVisible();
-    await expect(page.getByTestId("crm-pick-crm-heartland-mutual")).toBeVisible();
-    await expect(page.getByTestId("crm-pick-crm-northwind-health")).toBeVisible();
-    await expect(page.getByTestId("crm-pick-crm-contoso-retail")).toBeVisible();
-  });
-
-  test("Partner CRM audience filters to one partner", async ({ page }) => {
-    await page.getByTestId("build-business-case").click();
-    await page.getByTestId("choose-use-case-draft").click();
-    await page.getByTestId("continue-session").click();
-    await page.getByTestId("crm-audience-partner").click();
-    await page.getByTestId("crm-partner-select").selectOption("Softchoice");
-    await expect(page.getByTestId("crm-pick-crm-northwind-health")).toBeVisible();
-    await expect(page.getByTestId("crm-pick-crm-heartland-mutual")).toHaveCount(0);
+    await page.getByTestId("crm-search").fill("Contoso");
+    await page.getByTestId("crm-pick-crm-contoso-retail").click();
+    await expect(page.getByTestId("crm-selected")).toContainText("Contoso");
   });
 
   test("produce artifacts opens draft plan board", async ({ page }) => {

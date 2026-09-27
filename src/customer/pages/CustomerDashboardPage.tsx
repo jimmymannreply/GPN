@@ -13,6 +13,7 @@ function formatLabel(format: SessionFormat): string {
 function stageLabel(stage: SessionStage): string {
   const labels: Record<SessionStage, string> = {
     crm: "CRM",
+    intake: "Intake",
     scope: "Scope",
     plan: "Plan",
     run: "Run",

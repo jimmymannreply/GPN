@@ -39,13 +39,13 @@ test.describe("Customer Gemini Enterprise entry", () => {
     await expect(page.getByTestId("session-format")).toHaveText("Ghost ledger");
   });
 
-  test("demo preseed shows Heartland on dashboard", async ({ page }) => {
+  test("demo CRM account available after continue to session", async ({ page }) => {
     await page.getByTestId("build-business-case").click();
-    await page.getByTestId("demo-preseed").check();
     await page.getByTestId("choose-use-case-draft").click();
-    await expect(page).toHaveURL(/\/customer\/dashboard/);
-    await expect(page.getByText(/Heartland Mutual/i)).toBeVisible();
-    await expect(page.getByTestId("session-stage")).toHaveText(/Plan/i);
+    await page.getByTestId("continue-session").click();
+    await expect(page.getByTestId("crm-demo-crm-heartland-mutual")).toBeVisible();
+    await expect(page.getByTestId("crm-demo-crm-northwind-health")).toBeVisible();
+    await expect(page.getByTestId("crm-demo-crm-contoso-retail")).toBeVisible();
   });
 
   test("next actions after run include schedule DAF and produce", async ({ page }) => {

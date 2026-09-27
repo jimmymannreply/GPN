@@ -15,7 +15,14 @@ import type { AttendeeProfile } from "@/shared/attendees/types";
 const STORAGE_KEY = "customer-staged-session-v1";
 
 export type SessionFormat = "draft" | "ledger";
-export type SessionStage = "crm" | "scope" | "plan" | "run" | "artifacts" | "complete";
+export type SessionStage =
+  | "crm"
+  | "intake"
+  | "scope"
+  | "plan"
+  | "run"
+  | "artifacts"
+  | "complete";
 
 export interface CrmAccount {
   id: string;

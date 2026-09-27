@@ -1,9 +1,26 @@
 import type { CrmAccount, CustomerSessionState } from "@/customer/hooks/useCustomerSession";
+import { simulateLinkedInProfile } from "@/shared/attendees/simulateLinkedIn";
+import type { AttendeeProfile } from "@/shared/attendees/types";
 
 export type CrmScopeSeed = CustomerSessionState["scope"];
 
 export interface MockCrmAccount extends CrmAccount {
   scope: CrmScopeSeed;
+  contacts: { name: string; role: string }[];
+}
+
+/** Demo quick-picks on the customer CRM step (choose one). */
+export const CUSTOMER_DEMO_ACCOUNT_IDS = [
+  "crm-heartland-mutual",
+  "crm-northwind-health",
+  "crm-contoso-retail",
+] as const;
+
+function contactsFor(company: string, people: { name: string; role: string }[]): AttendeeProfile[] {
+  return people.map((p) => ({
+    ...p,
+    linkedIn: simulateLinkedInProfile(p.name, company),
+  }));
 }
 
 export const MOCK_CRM_ACCOUNTS: MockCrmAccount[] = [
@@ -21,6 +38,10 @@ export const MOCK_CRM_ACCOUNTS: MockCrmAccount[] = [
       constraints:
         "Q2 window; no new core-system RFP; must stay on existing Microsoft 365 footprint with CDW as partner of record.",
     },
+    contacts: [
+      { name: "Michelle Dorsey", role: "VP Claims Operations" },
+      { name: "Dana Reyes", role: "Director of IT" },
+    ],
   },
   {
     id: "crm-northwind-health",
@@ -36,6 +57,10 @@ export const MOCK_CRM_ACCOUNTS: MockCrmAccount[] = [
       constraints:
         "HIPAA-aligned deployment only; Softchoice-led discovery; no PHI in prompt logs for the pilot.",
     },
+    contacts: [
+      { name: "Priya Nair", role: "Chief Medical Information Officer" },
+      { name: "Jordan Blake", role: "VP Clinical Operations" },
+    ],
   },
   {
     id: "crm-contoso-retail",
@@ -51,6 +76,10 @@ export const MOCK_CRM_ACCOUNTS: MockCrmAccount[] = [
       constraints:
         "Must work on existing Chrome books; SHI delivers enablement; holiday freeze after mid-November.",
     },
+    contacts: [
+      { name: "Sam Ortiz", role: "VP Store Operations" },
+      { name: "Riley Chen", role: "Director of Digital Experience" },
+    ],
   },
   {
     id: "crm-fabrikam-mfg",
@@ -66,6 +95,7 @@ export const MOCK_CRM_ACCOUNTS: MockCrmAccount[] = [
       constraints:
         "Air-gapped plant Wi-Fi zones; CDW owns hardware refresh; pilot limited to two lines in Plant 3.",
     },
+    contacts: [{ name: "Chris Vogel", role: "Plant Operations Director" }],
   },
   {
     id: "crm-adventure-works",
@@ -81,6 +111,7 @@ export const MOCK_CRM_ACCOUNTS: MockCrmAccount[] = [
       constraints:
         "Softchoice-facilitated workshop; data from existing ERP exports only; no custom warehouse build in phase 1.",
     },
+    contacts: [{ name: "Taylor Kim", role: "VP Merchandising" }],
   },
   {
     id: "crm-litware-financial",
@@ -96,6 +127,7 @@ export const MOCK_CRM_ACCOUNTS: MockCrmAccount[] = [
       constraints:
         "Model residency in approved region; SHI + compliance co-own the RAI review; no customer PII in training.",
     },
+    contacts: [{ name: "Avery Shaw", role: "Head of KYC Operations" }],
   },
   {
     id: "crm-wide-world-importers",
@@ -111,8 +143,15 @@ export const MOCK_CRM_ACCOUNTS: MockCrmAccount[] = [
       constraints:
         "CDW runs the session; integrate with existing Teams + Excel exports; 60-day pilot clock.",
     },
+    contacts: [{ name: "Morgan Lee", role: "Director of Supply Planning" }],
   },
 ];
+
+export function customerDemoAccounts(): MockCrmAccount[] {
+  return CUSTOMER_DEMO_ACCOUNT_IDS.map(
+    (id) => MOCK_CRM_ACCOUNTS.find((a) => a.id === id)!,
+  ).filter(Boolean);
+}
 
 export function scopeFromCrmAccount(account: CrmAccount): CrmScopeSeed {
   const known = MOCK_CRM_ACCOUNTS.find((a) => a.id === account.id);
@@ -122,4 +161,10 @@ export function scopeFromCrmAccount(account: CrmAccount): CrmScopeSeed {
     cxoOutcome: `Prove a Gemini Enterprise pilot that improves ${account.industry.toLowerCase()} operating outcomes for the ${account.segment.toLowerCase()} segment.`,
     constraints: `Partner of record: ${account.partnerOfRecord}. Keep the pilot inside existing tools; editable once the room refines scope.`,
   };
+}
+
+export function attendeesFromCrmAccount(account: CrmAccount): AttendeeProfile[] {
+  const known = MOCK_CRM_ACCOUNTS.find((a) => a.id === account.id);
+  if (!known) return [];
+  return contactsFor(known.company, known.contacts);
 }

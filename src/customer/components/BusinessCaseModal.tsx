@@ -1,11 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { setCrmAudienceCustomer } from "@/customer/data/crmAudience";
-import {
-  applyDemoPreseed,
-  isDemoPreseedEnabled,
-  setDemoPreseedEnabled,
-} from "@/customer/data/demoPreseed";
 import type { SessionFormat } from "@/customer/hooks/useCustomerSession";
 
 export function BusinessCaseModal({
@@ -16,11 +11,9 @@ export function BusinessCaseModal({
   onClose: () => void;
 }) {
   const navigate = useNavigate();
-  const [demoPreseed, setDemoPreseed] = useState(() => isDemoPreseedEnabled());
 
   useEffect(() => {
     if (!open) return;
-    setDemoPreseed(isDemoPreseedEnabled());
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
     };
@@ -32,17 +25,9 @@ export function BusinessCaseModal({
 
   const startFacilitatedSession = (format: SessionFormat) => {
     setCrmAudienceCustomer();
-    if (demoPreseed || isDemoPreseedEnabled()) {
-      setDemoPreseedEnabled(true);
-      applyDemoPreseed(format);
-      navigate("/customer/dashboard", {
-        state: { format, startSession: false, preserveSeed: true },
-      });
-    } else {
-      navigate("/customer/dashboard", {
-        state: { format, startSession: true },
-      });
-    }
+    navigate("/customer/dashboard", {
+      state: { format, startSession: true },
+    });
     onClose();
   };
 
@@ -72,26 +57,9 @@ export function BusinessCaseModal({
           </button>
         </div>
         <p className="mt-2 text-sm text-gray-600">
-          Choose how you want to make the case for Gemini Enterprise with your team. Your partner
-          then runs the facilitated CRM → Scope → Plan → Run path; next actions come after Run.
+          Choose how you want to make the case for Gemini Enterprise. Next you&apos;ll confirm the
+          session on your dashboard, then look up your account in CRM.
         </p>
-
-        <label className="mt-4 flex cursor-pointer items-start gap-2 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-3 py-3 text-sm text-gray-600">
-          <input
-            type="checkbox"
-            className="mt-0.5"
-            checked={demoPreseed}
-            onChange={(e) => {
-              setDemoPreseed(e.target.checked);
-              setDemoPreseedEnabled(e.target.checked);
-            }}
-            data-testid="demo-preseed"
-          />
-          <span>
-            <span className="font-medium text-gray-800">Demo:</span> pre-fill customer data
-            (Heartland Mutual) for a faster walkthrough
-          </span>
-        </label>
 
         <div className="mt-6 grid gap-3">
           <button

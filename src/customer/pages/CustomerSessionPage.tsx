@@ -1,11 +1,16 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { CrmFindStep } from "@/customer/components/CrmFindStep";
+import { CustomerCrmStep } from "@/customer/components/CustomerCrmStep";
+import { CustomerIntakeStep } from "@/customer/components/CustomerIntakeStep";
 import { NextActionsPanel } from "@/customer/components/NextActionsPanel";
 import { SessionStageStepper } from "@/customer/components/SessionStageStepper";
-import { scopeFromCrmAccount } from "@/customer/data/mockCrm";
+import {
+  attendeesFromCrmAccount,
+  scopeFromCrmAccount,
+  type MockCrmAccount,
+} from "@/customer/data/mockCrm";
+import { buildSessionAgenda } from "@/customer/data/sessionAgenda";
 import { useCustomerSession } from "@/customer/hooks/useCustomerSession";
-import type { CrmAccount } from "@/customer/hooks/useCustomerSession";
 
 export function CustomerSessionPage() {
   const navigate = useNavigate();
@@ -17,6 +22,32 @@ export function CustomerSessionPage() {
     state.scope.painPoint.trim() &&
     state.scope.cxoOutcome.trim() &&
     state.scope.constraints.trim();
+
+  const agenda = buildSessionAgenda(
+    state.format,
+    state.crmAccount?.company ?? "your organization",
+  );
+
+  const selectCrmAccount = (account: MockCrmAccount) => {
+    setCrmAccount(account);
+    updateScope(scopeFromCrmAccount(account));
+    setAttendees(attendeesFromCrmAccount(account));
+  };
+
+  const goToScopeFromIntake = () => {
+    if (state.crmAccount) {
+      const crmScope = scopeFromCrmAccount(state.crmAccount);
+      updateScope({
+        painPoint: state.scope.painPoint.trim() || crmScope.painPoint,
+        cxoOutcome: state.scope.cxoOutcome.trim() || crmScope.cxoOutcome,
+        constraints: state.scope.constraints.trim() || crmScope.constraints,
+      });
+      if (state.attendees.length === 0) {
+        setAttendees(attendeesFromCrmAccount(state.crmAccount));
+      }
+    }
+    setStage("scope");
+  };
 
   const produceArtifacts = () => {
     setStage("artifacts");
@@ -45,7 +76,7 @@ export function CustomerSessionPage() {
             </p>
             <h1 className="mt-2 text-3xl font-semibold">Value session</h1>
             <p className="mt-2 max-w-2xl text-sm text-dl-text-secondary">
-              Walk CRM → Scope → Plan → Run, then choose next actions.
+              CRM → Intake → Scope → Plan → Run, then choose next actions.
             </p>
             <div className="mt-4">
               <SessionStageStepper stage={state.stage} />
@@ -60,18 +91,24 @@ export function CustomerSessionPage() {
       <main className="mx-auto max-w-5xl px-6 py-10">
         <section className="rounded-dl border border-dl-border bg-dl-surface p-6 shadow-card">
           {state.stage === "crm" && (
-            <CrmFindStep
+            <CustomerCrmStep
               selectedAccount={state.crmAccount}
-              attendees={state.attendees}
-              onSelectAccount={(account: CrmAccount) => {
-                setCrmAccount(account);
-                updateScope(scopeFromCrmAccount(account));
-              }}
-              onAttendeesChange={setAttendees}
+              onSelectAccount={selectCrmAccount}
               onNext={() => {
                 if (!state.crmAccount) return;
-                setStage("scope");
+                setStage("intake");
               }}
+            />
+          )}
+
+          {state.stage === "intake" && state.crmAccount && (
+            <CustomerIntakeStep
+              account={state.crmAccount}
+              scope={state.scope}
+              onApplyScopeField={updateScope}
+              onAttendeesChange={setAttendees}
+              onComplete={goToScopeFromIntake}
+              onSkipWithCrmDefaults={goToScopeFromIntake}
             />
           )}
 
@@ -80,8 +117,7 @@ export function CustomerSessionPage() {
               <div>
                 <h2 className="text-lg font-semibold">Scope the engagement</h2>
                 <p className="mt-1 text-sm text-dl-text-secondary">
-                  Prefills from the CRM account when available — edit or extend anything before
-                  you continue.
+                  Prefills from intake chat and CRM — edit or extend anything before you continue.
                 </p>
               </div>
               <label className="block text-sm">
@@ -131,47 +167,69 @@ export function CustomerSessionPage() {
               <div>
                 <h2 className="text-lg font-semibold">Confirm the plan</h2>
                 <p className="mt-1 text-sm text-dl-text-secondary">
-                  Review CRM, attendees, and scope before the run beat.
+                  Attendees from CRM / intake and the session agenda for{" "}
+                  {state.format === "ledger" ? "Ghost ledger" : "use-case draft"}.
                 </p>
               </div>
-              <dl className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <dt className="text-xs uppercase tracking-wider text-dl-text-secondary">Account</dt>
-                  <dd className="mt-1 text-sm font-medium">
-                    {state.crmAccount?.company ?? "—"}
-                  </dd>
-                  <dd className="mt-0.5 text-xs text-dl-text-secondary">
-                    {state.crmAccount
-                      ? `${state.crmAccount.partnerOfRecord} · ${state.crmAccount.industry}`
-                      : null}
-                  </dd>
+
+              <div>
+                <h3 className="text-sm font-semibold">Account</h3>
+                <p className="mt-1 text-sm" data-testid="plan-account">
+                  {state.crmAccount?.company ?? "—"}
+                  {state.crmAccount
+                    ? ` · ${state.crmAccount.partnerOfRecord} · ${state.crmAccount.industry}`
+                    : ""}
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold">Attendees</h3>
+                {state.attendees.length === 0 ? (
+                  <p className="mt-1 text-sm text-dl-text-secondary">None captured yet</p>
+                ) : (
+                  <ul className="mt-2 space-y-2" data-testid="plan-attendees">
+                    {state.attendees.map((a) => (
+                      <li
+                        key={`${a.name}-${a.role}`}
+                        className="rounded-dl border border-dl-border bg-dl-page px-3 py-2 text-sm"
+                      >
+                        <p className="font-medium">
+                          {a.name} · {a.role}
+                        </p>
+                        <p className="text-xs text-dl-text-secondary">{a.linkedIn.headline}</p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold">Agenda</h3>
+                <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm" data-testid="plan-agenda">
+                  {agenda.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ol>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold">Scope snapshot</h3>
+                <div className="mt-1 space-y-1 text-sm text-dl-text-secondary">
+                  <p>
+                    <span className="font-medium text-dl-text">Pain:</span>{" "}
+                    {state.scope.painPoint || "—"}
+                  </p>
+                  <p>
+                    <span className="font-medium text-dl-text">Outcome:</span>{" "}
+                    {state.scope.cxoOutcome || "—"}
+                  </p>
+                  <p>
+                    <span className="font-medium text-dl-text">Constraints:</span>{" "}
+                    {state.scope.constraints || "—"}
+                  </p>
                 </div>
-                <div>
-                  <dt className="text-xs uppercase tracking-wider text-dl-text-secondary">
-                    Attendees
-                  </dt>
-                  <dd className="mt-1 text-sm">
-                    {state.attendees.length === 0
-                      ? "None yet"
-                      : state.attendees.map((a) => `${a.name} (${a.role})`).join(", ")}
-                  </dd>
-                </div>
-                <div className="sm:col-span-2">
-                  <dt className="text-xs uppercase tracking-wider text-dl-text-secondary">Scope</dt>
-                  <dd className="mt-1 space-y-1 text-sm">
-                    <p>
-                      <span className="font-medium">Pain:</span> {state.scope.painPoint || "—"}
-                    </p>
-                    <p>
-                      <span className="font-medium">Outcome:</span> {state.scope.cxoOutcome || "—"}
-                    </p>
-                    <p>
-                      <span className="font-medium">Constraints:</span>{" "}
-                      {state.scope.constraints || "—"}
-                    </p>
-                  </dd>
-                </div>
-              </dl>
+              </div>
+
               <button
                 type="button"
                 onClick={() => setStage("run")}
@@ -190,8 +248,7 @@ export function CustomerSessionPage() {
                   <div>
                     <h2 className="text-lg font-semibold">Live ledger run</h2>
                     <p className="mt-1 text-sm text-dl-text-secondary">
-                      Keep the room light: advance when the cost-of-waiting beat is ready, then
-                      produce artifacts on the Ghost Ledger board.
+                      Advance when the cost-of-waiting beat is ready, then choose next actions.
                     </p>
                   </div>
                   <button
@@ -208,7 +265,7 @@ export function CustomerSessionPage() {
                   <div>
                     <h2 className="text-lg font-semibold">Facilitated run checklist</h2>
                     <p className="mt-1 text-sm text-dl-text-secondary">
-                      Align the room and confirm ranks before producing use-case artifacts.
+                      Align the room and confirm ranks before next actions.
                     </p>
                   </div>
                   <ul className="space-y-3">
