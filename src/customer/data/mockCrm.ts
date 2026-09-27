@@ -1,13 +1,25 @@
-import type { CrmAccount, CustomerSessionState } from "@/customer/hooks/useCustomerSession";
+import type {
+  CrmAccount,
+  CrmContact,
+  CustomerSessionState,
+  LedgerFields,
+} from "@/customer/hooks/useCustomerSession";
 import { simulateLinkedInProfile } from "@/shared/attendees/simulateLinkedIn";
 import type { AttendeeProfile } from "@/shared/attendees/types";
 
 export type CrmScopeSeed = CustomerSessionState["scope"];
 
-export interface MockCrmAccount extends CrmAccount {
-  scope: CrmScopeSeed;
-  contacts: { name: string; role: string }[];
+/** Optional CRM enrichment beyond identity (Company, Industry, Contact). */
+export interface MockCrmEnrichment {
+  techStack?: string;
+  painPoint?: string;
+  cxoOutcome?: string;
+  constraints?: string;
+  ledger?: Partial<LedgerFields>;
+  hackathonAttendees?: CrmContact[];
 }
+
+export interface MockCrmAccount extends CrmAccount, MockCrmEnrichment {}
 
 /** Demo quick-picks on the customer CRM step (choose one). */
 export const CUSTOMER_DEMO_ACCOUNT_IDS = [
@@ -16,7 +28,7 @@ export const CUSTOMER_DEMO_ACCOUNT_IDS = [
   "crm-contoso-retail",
 ] as const;
 
-function contactsFor(company: string, people: { name: string; role: string }[]): AttendeeProfile[] {
+function attendeesFor(company: string, people: CrmContact[]): AttendeeProfile[] {
   return people.map((p) => ({
     ...p,
     linkedIn: simulateLinkedInProfile(p.name, company),
@@ -27,18 +39,26 @@ export const MOCK_CRM_ACCOUNTS: MockCrmAccount[] = [
   {
     id: "crm-heartland-mutual",
     company: "Heartland Mutual Insurance",
-    partnerOfRecord: "CDW",
     industry: "Insurance",
+    contact: { name: "Michelle Dorsey", role: "VP Claims Operations" },
+    partnerOfRecord: "CDW",
     segment: "Enterprise",
-    scope: {
-      painPoint:
-        "Claims intake sits days in queues while analysts re-key PDF packets by hand across legacy imaging systems.",
-      cxoOutcome:
-        "Cut claims cycle time and overtime without a net-new headcount plan this fiscal year.",
-      constraints:
-        "Q2 window; no new core-system RFP; must stay on existing Microsoft 365 footprint with CDW as partner of record.",
+    techStack: "M365 · Guidewire · Azure",
+    painPoint:
+      "Claims intake sits days in queues while analysts re-key PDF packets by hand across legacy imaging systems.",
+    cxoOutcome:
+      "Cut claims cycle time and overtime without a net-new headcount plan this fiscal year.",
+    constraints:
+      "Q2 window; no new core-system RFP; must stay on existing Microsoft 365 footprint with CDW as partner of record.",
+    ledger: {
+      monthlyToolSpend: 180000,
+      ticketsPerMonth: 6200,
+      minutesPerTicket: 14,
+      hoursLostPerWeek: 90,
+      hourlyLoadedCost: 95,
+      monthlyChurnRevenue: 40000,
     },
-    contacts: [
+    hackathonAttendees: [
       { name: "Michelle Dorsey", role: "VP Claims Operations" },
       { name: "Dana Reyes", role: "Director of IT" },
     ],
@@ -46,18 +66,19 @@ export const MOCK_CRM_ACCOUNTS: MockCrmAccount[] = [
   {
     id: "crm-northwind-health",
     company: "Northwind Health Systems",
-    partnerOfRecord: "Softchoice",
     industry: "Healthcare",
+    contact: { name: "Priya Nair", role: "Chief Medical Information Officer" },
+    partnerOfRecord: "Softchoice",
     segment: "Enterprise",
-    scope: {
-      painPoint:
-        "Care-team knowledge is trapped in inboxes and shared drives, slowing prior-auth and discharge workflows.",
-      cxoOutcome:
-        "Give clinicians a grounded Gemini assistant that answers from approved clinical ops content in under a minute.",
-      constraints:
-        "HIPAA-aligned deployment only; Softchoice-led discovery; no PHI in prompt logs for the pilot.",
-    },
-    contacts: [
+    techStack: "M365 · Epic · Google Cloud",
+    painPoint:
+      "Care-team knowledge is trapped in inboxes and shared drives, slowing prior-auth and discharge workflows.",
+    cxoOutcome:
+      "Give clinicians a grounded Gemini assistant that answers from approved clinical ops content in under a minute.",
+    constraints:
+      "HIPAA-aligned deployment only; Softchoice-led discovery; no PHI in prompt logs for the pilot.",
+    // No ledger numbers — intake must ask ghost-ledger questions for ledger format
+    hackathonAttendees: [
       { name: "Priya Nair", role: "Chief Medical Information Officer" },
       { name: "Jordan Blake", role: "VP Clinical Operations" },
     ],
@@ -65,85 +86,47 @@ export const MOCK_CRM_ACCOUNTS: MockCrmAccount[] = [
   {
     id: "crm-contoso-retail",
     company: "Contoso Retail Group",
-    partnerOfRecord: "SHI",
     industry: "Retail",
+    contact: { name: "Sam Ortiz", role: "VP Store Operations" },
+    partnerOfRecord: "SHI",
     segment: "Commercial",
-    scope: {
-      painPoint:
-        "Store associates can't find consistent answers on promotions and returns, driving escalations to HQ.",
-      cxoOutcome:
-        "Stand up a store-floor Gemini agent that resolves the top 20 associate questions without a ticket.",
-      constraints:
-        "Must work on existing Chrome books; SHI delivers enablement; holiday freeze after mid-November.",
-    },
-    contacts: [
-      { name: "Sam Ortiz", role: "VP Store Operations" },
-      { name: "Riley Chen", role: "Director of Digital Experience" },
-    ],
+    techStack: "ChromeOS · Salesforce · Google Workspace",
+    // Sparse enrichment — intake asks pain + attendees if needed
+    hackathonAttendees: [{ name: "Sam Ortiz", role: "VP Store Operations" }],
   },
   {
     id: "crm-fabrikam-mfg",
     company: "Fabrikam Advanced Manufacturing",
-    partnerOfRecord: "CDW",
     industry: "Manufacturing",
+    contact: { name: "Chris Vogel", role: "Plant Operations Director" },
+    partnerOfRecord: "CDW",
     segment: "Mid-market",
-    scope: {
-      painPoint:
-        "Shift handoffs lose tribal knowledge; quality deviations take hours to reconstruct from paper travelers.",
-      cxoOutcome:
-        "Capture and retrieve line-side procedures with Gemini so first-pass yield stops depending on who is on shift.",
-      constraints:
-        "Air-gapped plant Wi-Fi zones; CDW owns hardware refresh; pilot limited to two lines in Plant 3.",
-    },
-    contacts: [{ name: "Chris Vogel", role: "Plant Operations Director" }],
+    // Identity only — intake asks everything else
   },
   {
     id: "crm-adventure-works",
     company: "Adventure Works Outdoors",
-    partnerOfRecord: "Softchoice",
     industry: "Consumer goods",
+    contact: { name: "Taylor Kim", role: "VP Merchandising" },
+    partnerOfRecord: "Softchoice",
     segment: "Commercial",
-    scope: {
-      painPoint:
-        "Merchandising briefs and vendor emails bury seasonal buy decisions until it's too late to reallocate.",
-      cxoOutcome:
-        "Weekly Gemini brief that ranks SKU risk and recommended actions for the merchandising council.",
-      constraints:
-        "Softchoice-facilitated workshop; data from existing ERP exports only; no custom warehouse build in phase 1.",
-    },
-    contacts: [{ name: "Taylor Kim", role: "VP Merchandising" }],
   },
   {
     id: "crm-litware-financial",
     company: "Litware Financial Services",
-    partnerOfRecord: "SHI",
     industry: "Financial services",
+    contact: { name: "Avery Shaw", role: "Head of KYC Operations" },
+    partnerOfRecord: "SHI",
     segment: "Enterprise",
-    scope: {
-      painPoint:
-        "KYC analysts rework the same document packs across systems with inconsistent checklist outcomes.",
-      cxoOutcome:
-        "Reduce average KYC case handling time by 30% with a Gemini-assisted evidence checklist.",
-      constraints:
-        "Model residency in approved region; SHI + compliance co-own the RAI review; no customer PII in training.",
-    },
-    contacts: [{ name: "Avery Shaw", role: "Head of KYC Operations" }],
+    techStack: "M365 · ServiceNow · Snowflake",
   },
   {
     id: "crm-wide-world-importers",
     company: "Wide World Importers",
-    partnerOfRecord: "CDW",
     industry: "Distribution",
+    contact: { name: "Morgan Lee", role: "Director of Supply Planning" },
+    partnerOfRecord: "CDW",
     segment: "Mid-market",
-    scope: {
-      painPoint:
-        "Supplier exception emails pile up; planners rebuild the same status deck every Monday morning.",
-      cxoOutcome:
-        "Auto-draft exception digests and recommended carrier actions before the planning standup.",
-      constraints:
-        "CDW runs the session; integrate with existing Teams + Excel exports; 60-day pilot clock.",
-    },
-    contacts: [{ name: "Morgan Lee", role: "Director of Supply Planning" }],
   },
 ];
 
@@ -153,18 +136,49 @@ export function customerDemoAccounts(): MockCrmAccount[] {
   ).filter(Boolean);
 }
 
+export function toCrmIdentity(account: MockCrmAccount): CrmAccount {
+  return {
+    id: account.id,
+    company: account.company,
+    industry: account.industry,
+    contact: account.contact,
+    partnerOfRecord: account.partnerOfRecord,
+    segment: account.segment,
+  };
+}
+
+export function enrichmentFromMock(account: MockCrmAccount): {
+  techStack: string;
+  scope: CrmScopeSeed;
+  ledger: Partial<LedgerFields>;
+  attendees: AttendeeProfile[];
+} {
+  return {
+    techStack: account.techStack ?? "",
+    scope: {
+      painPoint: account.painPoint ?? "",
+      cxoOutcome: account.cxoOutcome ?? "",
+      constraints: account.constraints ?? "",
+    },
+    ledger: account.ledger ?? {},
+    attendees: attendeesFor(account.company, account.hackathonAttendees ?? []),
+  };
+}
+
 export function scopeFromCrmAccount(account: CrmAccount): CrmScopeSeed {
   const known = MOCK_CRM_ACCOUNTS.find((a) => a.id === account.id);
-  if (known) return { ...known.scope };
-  return {
-    painPoint: `${account.company} (${account.industry}) is losing time to manual, fragmented work across teams.`,
-    cxoOutcome: `Prove a Gemini Enterprise pilot that improves ${account.industry.toLowerCase()} operating outcomes for the ${account.segment.toLowerCase()} segment.`,
-    constraints: `Partner of record: ${account.partnerOfRecord}. Keep the pilot inside existing tools; editable once the room refines scope.`,
-  };
+  if (known?.painPoint || known?.cxoOutcome || known?.constraints) {
+    return {
+      painPoint: known.painPoint ?? "",
+      cxoOutcome: known.cxoOutcome ?? "",
+      constraints: known.constraints ?? "",
+    };
+  }
+  return { painPoint: "", cxoOutcome: "", constraints: "" };
 }
 
 export function attendeesFromCrmAccount(account: CrmAccount): AttendeeProfile[] {
   const known = MOCK_CRM_ACCOUNTS.find((a) => a.id === account.id);
-  if (!known) return [];
-  return contactsFor(known.company, known.contacts);
+  if (!known?.hackathonAttendees?.length) return [];
+  return attendeesFor(known.company, known.hackathonAttendees);
 }

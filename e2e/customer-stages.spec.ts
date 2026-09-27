@@ -27,7 +27,7 @@ test.describe("Customer staged session entry", () => {
     await expect(page.getByTestId("pcm-telemetry")).toHaveCount(0);
   });
 
-  test("CRM demo pick goes to intake then scope with prefill", async ({ page }) => {
+  test("CRM demo pick shows company industry contact; full CRM skips chat", async ({ page }) => {
     await page.getByTestId("build-business-case").click();
     await page.getByTestId("choose-use-case-draft").click();
     await page.getByTestId("continue-session").click();
@@ -37,12 +37,20 @@ test.describe("Customer staged session entry", () => {
     await expect(page.getByTestId("crm-audience-google")).toHaveCount(0);
 
     await page.getByTestId("crm-demo-crm-heartland-mutual").click();
+    await expect(page.getByTestId("crm-selected")).toContainText("Heartland");
+    await expect(page.getByTestId("crm-selected")).toContainText(/Michelle Dorsey/i);
+    await expect(page.getByTestId("crm-selected")).toContainText(/Insurance/i);
+
     await page.getByTestId("crm-next").click();
     await expect(page.getByTestId("stage-intake")).toBeVisible();
-    await expect(page.getByTestId("conversational-intake")).toBeVisible();
+    // Heartland is fully enriched in mock CRM — intake has nothing to ask
+    await expect(page.getByTestId("intake-crm-covered")).toBeVisible();
+    await expect(page.getByTestId("conversational-intake")).toHaveCount(0);
+    await page.getByTestId("intake-continue-crm").click();
 
-    await page.getByTestId("intake-skip-crm-defaults").click();
     await expect(page.getByTestId("stage-scope")).toBeVisible();
+    await expect(page.getByTestId("scope-identity")).toContainText(/Michelle Dorsey/i);
+    await expect(page.getByTestId("scope-tech-stack")).toContainText(/Guidewire/i);
     await expect(page.getByTestId("scope-pain")).toHaveValue(/Claims intake/i);
     await page.getByTestId("scope-pain").fill("Claims intake sits days — plus seasonal surge.");
     await expect(page.getByTestId("scope-pain")).toHaveValue(/seasonal surge/);
@@ -51,16 +59,31 @@ test.describe("Customer staged session entry", () => {
     await expect(page.getByTestId("stage-plan")).toBeVisible();
     await expect(page.getByTestId("plan-attendees")).toBeVisible();
     await expect(page.getByTestId("plan-agenda")).toBeVisible();
-    await expect(page.getByText(/Michelle Dorsey/i)).toBeVisible();
+    await expect(page.getByTestId("plan-account")).toContainText(/Michelle Dorsey/i);
+    await expect(page.getByText(/Michelle Dorsey/i).first()).toBeVisible();
   });
 
-  test("CRM search lookup finds account", async ({ page }) => {
+  test("sparse CRM account asks missing fields in intake chat", async ({ page }) => {
     await page.getByTestId("build-business-case").click();
     await page.getByTestId("choose-use-case-draft").click();
     await page.getByTestId("continue-session").click();
-    await page.getByTestId("crm-search").fill("Contoso");
+    await page.getByTestId("crm-demo-crm-contoso-retail").click();
+    await page.getByTestId("crm-next").click();
+    await expect(page.getByTestId("stage-intake")).toBeVisible();
+    await expect(page.getByTestId("conversational-intake")).toBeVisible();
+    await expect(page.getByText(/pain/i).first()).toBeVisible();
+    await page.getByTestId("intake-skip-crm-defaults").click();
+    await expect(page.getByTestId("stage-scope")).toBeVisible();
+  });
+
+  test("CRM search lookup finds account by contact", async ({ page }) => {
+    await page.getByTestId("build-business-case").click();
+    await page.getByTestId("choose-use-case-draft").click();
+    await page.getByTestId("continue-session").click();
+    await page.getByTestId("crm-search").fill("Sam Ortiz");
     await page.getByTestId("crm-pick-crm-contoso-retail").click();
     await expect(page.getByTestId("crm-selected")).toContainText("Contoso");
+    await expect(page.getByTestId("crm-selected")).toContainText(/Sam Ortiz/i);
   });
 
   test("add account via chat when not in CRM", async ({ page }) => {
@@ -72,6 +95,7 @@ test.describe("Customer staged session entry", () => {
     await expect(page.getByText(/Add your account via intake/i)).toBeVisible();
     await expect(page.getByTestId("conversational-intake")).toBeVisible();
     await expect(page.getByTestId("intake-skip-crm-defaults")).toHaveCount(0);
+    await expect(page.getByText(/organization/i).first()).toBeVisible();
   });
 
   test("produce artifacts opens draft plan board", async ({ page }) => {
@@ -87,8 +111,10 @@ test.describe("Customer staged session entry", () => {
             company: "Heartland Mutual Insurance",
             partnerOfRecord: "CDW",
             industry: "Insurance",
+            contact: { name: "Michelle Dorsey", role: "VP Claims Operations" },
             segment: "Enterprise",
           },
+          techStack: "M365 · Guidewire · Azure",
           attendees: [
             {
               name: "Alex Chen",
@@ -107,6 +133,14 @@ test.describe("Customer staged session entry", () => {
             painPoint: "Manual claims",
             cxoOutcome: "Faster cycle",
             constraints: "Q2",
+          },
+          ledger: {
+            monthlyToolSpend: null,
+            ticketsPerMonth: null,
+            minutesPerTicket: null,
+            hoursLostPerWeek: null,
+            hourlyLoadedCost: null,
+            monthlyChurnRevenue: null,
           },
           fundingStatus: "Draft",
           fundingValueLabel: "$7,750,000 / year",

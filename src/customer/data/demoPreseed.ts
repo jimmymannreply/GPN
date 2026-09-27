@@ -51,20 +51,37 @@ export function applyDemoPreseed(format: SessionFormat): CustomerSessionState {
   const staged: CustomerSessionState = {
     format,
     stage: "plan",
-    crmAccount: HEARTLAND,
+    crmAccount: {
+      id: HEARTLAND.id,
+      company: HEARTLAND.company,
+      industry: HEARTLAND.industry,
+      contact: HEARTLAND.contact,
+      partnerOfRecord: HEARTLAND.partnerOfRecord,
+      segment: HEARTLAND.segment,
+    },
+    techStack: HEARTLAND.techStack ?? "",
     attendees,
     scope,
+    ledger: {
+      monthlyToolSpend: HEARTLAND.ledger?.monthlyToolSpend ?? null,
+      ticketsPerMonth: HEARTLAND.ledger?.ticketsPerMonth ?? null,
+      minutesPerTicket: HEARTLAND.ledger?.minutesPerTicket ?? null,
+      hoursLostPerWeek: HEARTLAND.ledger?.hoursLostPerWeek ?? null,
+      hourlyLoadedCost: HEARTLAND.ledger?.hourlyLoadedCost ?? null,
+      monthlyChurnRevenue: HEARTLAND.ledger?.monthlyChurnRevenue ?? null,
+    },
     fundingStatus: DEFAULT_FUNDING_CLAIM.status,
     fundingValueLabel: DEFAULT_FUNDING_CLAIM.annualValueLabel,
   };
 
   const journeySeed = {
     customerName: HEARTLAND.company,
-    industryStack: `${HEARTLAND.industry} · ${HEARTLAND.segment}`,
+    industryStack: `${HEARTLAND.industry} · ${HEARTLAND.techStack ?? HEARTLAND.segment}`,
     painPoint: scope.painPoint,
     cxoOutcome: scope.cxoOutcome,
     headcount: Math.max(attendees.length, 4),
     attendees,
+    ledger: staged.ledger,
   };
 
   try {

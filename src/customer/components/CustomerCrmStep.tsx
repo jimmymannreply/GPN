@@ -6,6 +6,17 @@ import {
 } from "@/customer/data/mockCrm";
 import type { CrmAccount } from "@/customer/hooks/useCustomerSession";
 
+function AccountMeta({ account }: { account: Pick<CrmAccount, "company" | "industry" | "contact"> }) {
+  return (
+    <>
+      <p className="font-medium">{account.company}</p>
+      <p className="mt-1 text-xs text-dl-text-secondary">
+        {account.industry} · Contact: {account.contact.name} ({account.contact.role})
+      </p>
+    </>
+  );
+}
+
 export function CustomerCrmStep({
   selectedAccount,
   onSelectAccount,
@@ -27,6 +38,7 @@ export function CustomerCrmStep({
       (a) =>
         a.company.toLowerCase().includes(q) ||
         a.industry.toLowerCase().includes(q) ||
+        a.contact.name.toLowerCase().includes(q) ||
         a.segment.toLowerCase().includes(q),
     );
   }, [query]);
@@ -34,10 +46,10 @@ export function CustomerCrmStep({
   return (
     <div className="space-y-6" data-testid="stage-crm">
       <div>
-        <h2 className="text-lg font-semibold">Find your account</h2>
+        <h2 className="text-lg font-semibold">Customer identification</h2>
         <p className="mt-1 text-sm text-dl-text-secondary">
-          Look yourself up in CRM, pick a demo account, or add your account through intake chat if
-          you can&apos;t find it.
+          CRM identity is <strong>company</strong>, <strong>industry</strong>, and{" "}
+          <strong>contact</strong>. Look yourself up, pick a demo account, or add via intake chat.
         </p>
       </div>
 
@@ -60,10 +72,7 @@ export function CustomerCrmStep({
                 }`}
                 data-testid={`crm-demo-${account.id}`}
               >
-                <p className="font-medium">{account.company}</p>
-                <p className="mt-1 text-xs text-dl-text-secondary">
-                  {account.partnerOfRecord} · {account.industry}
-                </p>
+                <AccountMeta account={account} />
               </button>
             );
           })}
@@ -72,7 +81,7 @@ export function CustomerCrmStep({
 
       <div>
         <label className="block text-sm">
-          <span className="text-dl-text-secondary">Look up your company</span>
+          <span className="text-dl-text-secondary">Look up company, industry, or contact</span>
           <input
             type="search"
             value={query}
@@ -90,8 +99,8 @@ export function CustomerCrmStep({
           className="rounded-dl border border-dashed border-dl-border p-4 text-sm text-dl-text-secondary"
           data-testid="crm-customer-lookup-hint"
         >
-          Search to find your account, or use a demo pick above. Full partner directories are not
-          shown on the customer path.
+          Search to find your account, use a demo pick, or add your account via chat if it is not
+          listed.
         </p>
       ) : (
         <ul className="grid gap-2" data-testid="crm-account-list">
@@ -109,9 +118,9 @@ export function CustomerCrmStep({
                   }`}
                   data-testid={`crm-pick-${account.id}`}
                 >
-                  <p className="text-sm font-semibold">{account.company}</p>
+                  <AccountMeta account={account} />
                   <p className="mt-1 text-xs text-dl-text-secondary">
-                    {account.partnerOfRecord} · {account.industry} · {account.segment}
+                    {account.partnerOfRecord} · {account.segment}
                   </p>
                 </button>
               </li>
@@ -119,16 +128,17 @@ export function CustomerCrmStep({
           })}
           {filtered.length === 0 && (
             <li className="rounded-dl border border-dashed border-dl-border p-4 text-sm text-dl-text-secondary">
-              No match. Try another name, a demo account, or add your account via intake chat below.
+              No match. Try another search, a demo account, or add via intake chat.
             </li>
           )}
         </ul>
       )}
 
       {selectedAccount && (
-        <p className="text-sm" data-testid="crm-selected">
-          Selected: <strong>{selectedAccount.company}</strong>
-        </p>
+        <div className="rounded-dl border border-dl-border bg-dl-page p-3 text-sm" data-testid="crm-selected">
+          <p className="text-xs uppercase tracking-wider text-dl-text-secondary">Selected identity</p>
+          <AccountMeta account={selectedAccount} />
+        </div>
       )}
 
       <div className="flex flex-wrap items-center gap-3">

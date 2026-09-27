@@ -5,16 +5,37 @@ import { CustomerIntakeStep } from "@/customer/components/CustomerIntakeStep";
 import { NextActionsPanel } from "@/customer/components/NextActionsPanel";
 import { SessionStageStepper } from "@/customer/components/SessionStageStepper";
 import {
-  attendeesFromCrmAccount,
-  scopeFromCrmAccount,
+  enrichmentFromMock,
+  toCrmIdentity,
   type MockCrmAccount,
 } from "@/customer/data/mockCrm";
 import { buildSessionAgenda } from "@/customer/data/sessionAgenda";
-import { useCustomerSession, type CrmAccount } from "@/customer/hooks/useCustomerSession";
+import {
+  useCustomerSession,
+  type CrmAccount,
+  type LedgerFields,
+} from "@/customer/hooks/useCustomerSession";
+
+const emptyLedger: LedgerFields = {
+  monthlyToolSpend: null,
+  ticketsPerMonth: null,
+  minutesPerTicket: null,
+  hoursLostPerWeek: null,
+  hourlyLoadedCost: null,
+  monthlyChurnRevenue: null,
+};
 
 export function CustomerSessionPage() {
   const navigate = useNavigate();
-  const { state, setCrmAccount, setAttendees, updateScope, setStage } = useCustomerSession();
+  const {
+    state,
+    setCrmAccount,
+    setTechStack,
+    setAttendees,
+    updateScope,
+    updateLedger,
+    setStage,
+  } = useCustomerSession();
   const [roomAligned, setRoomAligned] = useState(false);
   const [ranksReady, setRanksReady] = useState(false);
   const [addingViaChat, setAddingViaChat] = useState(false);
@@ -30,44 +51,48 @@ export function CustomerSessionPage() {
   );
 
   const selectCrmAccount = (account: MockCrmAccount) => {
-    setCrmAccount(account);
-    updateScope(scopeFromCrmAccount(account));
-    setAttendees(attendeesFromCrmAccount(account));
+    const enrichment = enrichmentFromMock(account);
+    setCrmAccount(toCrmIdentity(account));
+    setTechStack(enrichment.techStack);
+    updateScope(enrichment.scope);
+    updateLedger({ ...emptyLedger, ...enrichment.ledger });
+    setAttendees(enrichment.attendees);
   };
 
-  const finishIntake = (useCrmDefaults: boolean) => {
-    const account = state.crmAccount;
-    if (
-      useCrmDefaults &&
-      account?.company &&
-      account.id &&
-      !account.id.startsWith("crm-chat-")
-    ) {
-      const crmScope = scopeFromCrmAccount(account);
-      updateScope({
-        painPoint: state.scope.painPoint.trim() || crmScope.painPoint,
-        cxoOutcome: state.scope.cxoOutcome.trim() || crmScope.cxoOutcome,
-        constraints: state.scope.constraints.trim() || crmScope.constraints,
-      });
-      if (state.attendees.length === 0) {
-        setAttendees(attendeesFromCrmAccount(account));
-      }
-    }
+  const clearEnrichment = () => {
+    setCrmAccount(null);
+    setTechStack("");
+    updateScope({ painPoint: "", cxoOutcome: "", constraints: "" });
+    updateLedger({ ...emptyLedger });
+    setAttendees([]);
+  };
+
+  const finishIntake = () => {
     setAddingViaChat(false);
     setStage("scope");
   };
 
   const produceArtifacts = () => {
     setStage("artifacts");
+    const stack = state.techStack.trim();
+    const industryStack = state.crmAccount
+      ? [state.crmAccount.industry, stack || state.crmAccount.segment].filter(Boolean).join(" · ")
+      : stack;
     const seed = {
       customerName: state.crmAccount?.company ?? "Customer",
-      industryStack: state.crmAccount
-        ? `${state.crmAccount.industry} · ${state.crmAccount.segment}`
-        : "",
+      industryStack,
       painPoint: state.scope.painPoint,
       cxoOutcome: state.scope.cxoOutcome,
       headcount: Math.max(state.attendees.length, 4),
       attendees: state.attendees,
+      ledger: {
+        monthlyToolSpend: state.ledger.monthlyToolSpend,
+        ticketsPerMonth: state.ledger.ticketsPerMonth,
+        minutesPerTicket: state.ledger.minutesPerTicket,
+        hoursLostPerWeek: state.ledger.hoursLostPerWeek,
+        hourlyLoadedCost: state.ledger.hourlyLoadedCost,
+        monthlyChurnRevenue: state.ledger.monthlyChurnRevenue,
+      },
     };
     sessionStorage.setItem("customer-session-seed-v1", JSON.stringify(seed));
     if (state.format === "draft") navigate("/customer/use-case-draft");
@@ -100,20 +125,19 @@ export function CustomerSessionPage() {
         <section className="rounded-dl border border-dl-border bg-dl-surface p-6 shadow-card">
           {state.stage === "crm" && (
             <CustomerCrmStep
-              selectedAccount={state.crmAccount}
+              selectedAccount={state.crmAccount?.company ? state.crmAccount : null}
               onSelectAccount={(account) => {
                 setAddingViaChat(false);
                 selectCrmAccount(account);
               }}
               onNext={() => {
-                if (!state.crmAccount) return;
+                if (!state.crmAccount?.company) return;
                 setAddingViaChat(false);
                 setStage("intake");
               }}
               onAddViaChat={() => {
                 setAddingViaChat(true);
-                setAttendees([]);
-                updateScope({ painPoint: "", cxoOutcome: "", constraints: "" });
+                clearEnrichment();
                 setStage("intake");
               }}
             />
@@ -121,15 +145,22 @@ export function CustomerSessionPage() {
 
           {state.stage === "intake" && (state.crmAccount?.company || addingViaChat) && (
             <CustomerIntakeStep
+              format={state.format}
               account={addingViaChat ? null : state.crmAccount}
               scope={state.scope}
+              techStack={state.techStack}
+              ledger={state.ledger}
+              attendees={state.attendees}
+              addingViaChat={addingViaChat}
               onApplyScopeField={updateScope}
+              onTechStack={setTechStack}
+              onUpdateLedger={updateLedger}
               onCreateAccount={(account: CrmAccount) => {
                 setCrmAccount(account);
               }}
               onAttendeesChange={setAttendees}
-              onComplete={() => finishIntake(false)}
-              onSkipWithCrmDefaults={() => finishIntake(true)}
+              onComplete={() => finishIntake()}
+              onSkipWithCrmDefaults={() => finishIntake()}
             />
           )}
 
@@ -141,6 +172,28 @@ export function CustomerSessionPage() {
                   Prefills from intake chat and CRM — edit or extend anything before you continue.
                 </p>
               </div>
+
+              {state.crmAccount?.company && (
+                <div
+                  className="rounded-dl border border-dl-border bg-dl-page p-3 text-sm"
+                  data-testid="scope-identity"
+                >
+                  <p className="text-xs uppercase tracking-wider text-dl-text-secondary">
+                    Identification
+                  </p>
+                  <p className="mt-1 font-medium">{state.crmAccount.company}</p>
+                  <p className="text-xs text-dl-text-secondary">
+                    {state.crmAccount.industry} · Contact: {state.crmAccount.contact.name} (
+                    {state.crmAccount.contact.role})
+                  </p>
+                  {state.techStack ? (
+                    <p className="mt-1 text-xs text-dl-text-secondary" data-testid="scope-tech-stack">
+                      Stack: {state.techStack}
+                    </p>
+                  ) : null}
+                </div>
+              )}
+
               <label className="block text-sm">
                 <span className="text-dl-text-secondary">Pain point</span>
                 <textarea
@@ -198,9 +251,14 @@ export function CustomerSessionPage() {
                 <p className="mt-1 text-sm" data-testid="plan-account">
                   {state.crmAccount?.company ?? "—"}
                   {state.crmAccount
-                    ? ` · ${state.crmAccount.partnerOfRecord} · ${state.crmAccount.industry}`
+                    ? ` · ${state.crmAccount.industry} · Contact: ${state.crmAccount.contact.name}`
                     : ""}
                 </p>
+                {state.techStack ? (
+                  <p className="mt-1 text-xs text-dl-text-secondary" data-testid="plan-tech-stack">
+                    Stack: {state.techStack}
+                  </p>
+                ) : null}
               </div>
 
               <div>

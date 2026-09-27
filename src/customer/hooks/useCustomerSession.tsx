@@ -24,20 +24,38 @@ export type SessionStage =
   | "artifacts"
   | "complete";
 
+/** Customer identification from CRM (or intake chat). */
+export interface CrmContact {
+  name: string;
+  role: string;
+}
+
 export interface CrmAccount {
   id: string;
   company: string;
-  partnerOfRecord: string;
   industry: string;
+  contact: CrmContact;
+  partnerOfRecord: string;
   segment: string;
+}
+
+export interface LedgerFields {
+  monthlyToolSpend: number | null;
+  ticketsPerMonth: number | null;
+  minutesPerTicket: number | null;
+  hoursLostPerWeek: number | null;
+  hourlyLoadedCost: number | null;
+  monthlyChurnRevenue: number | null;
 }
 
 export interface CustomerSessionState {
   format: SessionFormat;
   stage: SessionStage;
   crmAccount: CrmAccount | null;
+  techStack: string;
   attendees: AttendeeProfile[];
   scope: { painPoint: string; cxoOutcome: string; constraints: string };
+  ledger: LedgerFields;
   fundingStatus: FundingStatus;
   fundingValueLabel: string;
 }
@@ -48,13 +66,24 @@ const defaultScope: CustomerSessionState["scope"] = {
   constraints: "",
 };
 
+const defaultLedger: LedgerFields = {
+  monthlyToolSpend: null,
+  ticketsPerMonth: null,
+  minutesPerTicket: null,
+  hoursLostPerWeek: null,
+  hourlyLoadedCost: null,
+  monthlyChurnRevenue: null,
+};
+
 function createInitialState(format: SessionFormat = "draft"): CustomerSessionState {
   return {
     format,
     stage: "crm",
     crmAccount: null,
+    techStack: "",
     attendees: [],
     scope: { ...defaultScope },
+    ledger: { ...defaultLedger },
     fundingStatus: "Draft",
     fundingValueLabel: DEFAULT_FUNDING_CLAIM.annualValueLabel,
   };
@@ -63,9 +92,11 @@ function createInitialState(format: SessionFormat = "draft"): CustomerSessionSta
 interface CustomerSessionContextValue {
   state: CustomerSessionState;
   startSession: (format: SessionFormat) => void;
-  setCrmAccount: (account: CrmAccount) => void;
+  setCrmAccount: (account: CrmAccount | null) => void;
+  setTechStack: (techStack: string) => void;
   setAttendees: (attendees: AttendeeProfile[]) => void;
   updateScope: (patch: Partial<CustomerSessionState["scope"]>) => void;
+  updateLedger: (patch: Partial<LedgerFields>) => void;
   setStage: (stage: SessionStage) => void;
   resetSession: () => void;
 }
@@ -76,7 +107,20 @@ export function CustomerSessionProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<CustomerSessionState>(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return JSON.parse(raw) as CustomerSessionState;
+      if (raw) {
+        const parsed = JSON.parse(raw) as CustomerSessionState;
+        const contact = parsed.crmAccount?.contact ?? { name: "", role: "" };
+        return {
+          ...createInitialState(parsed.format),
+          ...parsed,
+          crmAccount: parsed.crmAccount
+            ? { ...parsed.crmAccount, contact }
+            : null,
+          techStack: parsed.techStack ?? "",
+          ledger: { ...defaultLedger, ...parsed.ledger },
+          scope: { ...defaultScope, ...parsed.scope },
+        };
+      }
     } catch {
       /* ignore */
     }
@@ -94,8 +138,12 @@ export function CustomerSessionProvider({ children }: { children: ReactNode }) {
     setState(createInitialState(format));
   }, []);
 
-  const setCrmAccount = useCallback((account: CrmAccount) => {
+  const setCrmAccount = useCallback((account: CrmAccount | null) => {
     setState((prev) => ({ ...prev, crmAccount: account }));
+  }, []);
+
+  const setTechStack = useCallback((techStack: string) => {
+    setState((prev) => ({ ...prev, techStack }));
   }, []);
 
   const setAttendees = useCallback((attendees: AttendeeProfile[]) => {
@@ -104,6 +152,10 @@ export function CustomerSessionProvider({ children }: { children: ReactNode }) {
 
   const updateScope = useCallback((patch: Partial<CustomerSessionState["scope"]>) => {
     setState((prev) => ({ ...prev, scope: { ...prev.scope, ...patch } }));
+  }, []);
+
+  const updateLedger = useCallback((patch: Partial<LedgerFields>) => {
+    setState((prev) => ({ ...prev, ledger: { ...prev.ledger, ...patch } }));
   }, []);
 
   const setStage = useCallback((stage: SessionStage) => {
@@ -119,8 +171,10 @@ export function CustomerSessionProvider({ children }: { children: ReactNode }) {
     state,
     startSession,
     setCrmAccount,
+    setTechStack,
     setAttendees,
     updateScope,
+    updateLedger,
     setStage,
     resetSession,
   };

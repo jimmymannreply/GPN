@@ -99,6 +99,7 @@ export function CrmFindStep({
       company,
       partnerOfRecord: addForm.partnerOfRecord.trim() || "Partner",
       industry: addForm.industry.trim() || "General",
+      contact: { name: "Primary contact", role: "Sponsor" },
       segment: addForm.segment.trim() || "Commercial",
     };
     pickAccount(account);
@@ -293,7 +294,8 @@ export function CrmFindStep({
                 >
                   <p className="text-sm font-semibold">{account.company}</p>
                   <p className="mt-1 text-xs text-dl-text-secondary">
-                    {account.partnerOfRecord} · {account.industry} · {account.segment}
+                    {account.industry} · Contact: {account.contact.name} · {account.partnerOfRecord} ·{" "}
+                    {account.segment}
                   </p>
                 </button>
               </li>

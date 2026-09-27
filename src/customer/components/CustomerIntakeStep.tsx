@@ -1,113 +1,189 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
-  CUSTOMER_SESSION_HEADCOUNT_PROMPT,
-  CUSTOMER_SESSION_INTAKE_OPENING,
-  CUSTOMER_SESSION_NEW_ACCOUNT_OPENING,
-  customerSessionIntakePrefixSteps,
-  customerSessionNewAccountPrefixSteps,
-  parseIndustryFromStack,
+  buildCustomerIntakePlan,
+  ledgerValueFromStep,
   parsePartnerFromIndustryStack,
 } from "@/customer/data/customerIntakeSteps";
-import type { CrmAccount, CustomerSessionState } from "@/customer/hooks/useCustomerSession";
+import type {
+  CrmAccount,
+  CustomerSessionState,
+  LedgerFields,
+  SessionFormat,
+} from "@/customer/hooks/useCustomerSession";
+import { ConversationalIntake } from "@/shared/conversational/ConversationalIntake";
 import { SessionIntakeWithAttendees } from "@/shared/conversational/SessionIntakeWithAttendees";
 import type { AttendeeProfile } from "@/shared/attendees/types";
 
 export function CustomerIntakeStep({
+  format,
   account,
   scope,
+  techStack,
+  ledger,
+  attendees,
+  addingViaChat,
   onApplyScopeField,
+  onTechStack,
+  onUpdateLedger,
   onCreateAccount,
   onAttendeesChange,
   onComplete,
   onSkipWithCrmDefaults,
 }: {
+  format: SessionFormat;
   account: CrmAccount | null;
   scope: CustomerSessionState["scope"];
+  techStack: string;
+  ledger: LedgerFields;
+  attendees: AttendeeProfile[];
+  addingViaChat: boolean;
   onApplyScopeField: (patch: Partial<CustomerSessionState["scope"]>) => void;
+  onTechStack: (stack: string) => void;
+  onUpdateLedger: (patch: Partial<LedgerFields>) => void;
   onCreateAccount: (account: CrmAccount) => void;
   onAttendeesChange: (attendees: AttendeeProfile[]) => void;
   onComplete: () => void;
   onSkipWithCrmDefaults: () => void;
 }) {
   const [sessionKey] = useState(() => Date.now());
-  const draftRef = useRef({ name: "", stack: "" });
-  const addingAccount = !account;
+  const plan = useMemo(
+    () =>
+      buildCustomerIntakePlan(
+        format,
+        account,
+        scope,
+        techStack,
+        ledger,
+        attendees.length,
+        addingViaChat,
+      ),
+    // Freeze gaps at mount so filling fields doesn't reshuffle the script
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [sessionKey],
+  );
+
+  const [phase, setPhase] = useState<"fields" | "attendees">(() =>
+    plan.fieldSteps.length === 0 && plan.needAttendees ? "attendees" : "fields",
+  );
+  const draftRef = useRef({
+    customerName: "",
+    industry: "",
+    contactName: "",
+    contactRole: "",
+    partnerOfRecord: "",
+  });
+
+  const applyField = (stepId: string, value: unknown) => {
+    const text = String(value);
+    if (stepId === "customerName") draftRef.current.customerName = text;
+    else if (stepId === "industry") draftRef.current.industry = text;
+    else if (stepId === "contactName") draftRef.current.contactName = text;
+    else if (stepId === "contactRole") draftRef.current.contactRole = text;
+    else if (stepId === "partnerOfRecord") draftRef.current.partnerOfRecord = text;
+    else if (stepId === "techStack") onTechStack(text);
+    else if (stepId === "painPoint" || stepId === "cxoOutcome" || stepId === "constraints") {
+      onApplyScopeField({ [stepId]: text });
+    } else {
+      const ledgerPatch = ledgerValueFromStep(stepId, value);
+      if (ledgerPatch) onUpdateLedger(ledgerPatch);
+    }
+  };
+
+  const finishFields = () => {
+    if (addingViaChat || !account?.company) {
+      const d = draftRef.current;
+      onCreateAccount({
+        id: `crm-chat-${Date.now()}`,
+        company: d.customerName.trim() || "New customer account",
+        industry: d.industry.trim() || "General",
+        contact: {
+          name: d.contactName.trim() || "Primary contact",
+          role: d.contactRole.trim() || "Sponsor",
+        },
+        partnerOfRecord: parsePartnerFromIndustryStack(d.partnerOfRecord || d.industry),
+        segment: "Commercial",
+      });
+    }
+    if (plan.needAttendees) setPhase("attendees");
+    else onComplete();
+  };
+
+  const canSkip = Boolean(account?.company) && !addingViaChat;
+  const crmCovered =
+    phase === "fields" && plan.fieldSteps.length === 0 && !plan.needAttendees;
 
   return (
     <div className="space-y-4" data-testid="stage-intake">
       <div>
         <h2 className="text-lg font-semibold">
-          {addingAccount ? "Add your account via intake" : "Intake chat"}
+          {addingViaChat ? "Add your account via intake" : "Intake chat"}
         </h2>
         <p className="mt-1 text-sm text-dl-text-secondary">
-          {addingAccount ? (
-            <>
-              We&apos;ll create your CRM account from this chat, then capture scope and who&apos;s in
-              the room.
-            </>
-          ) : (
-            <>
-              Beyond company lookup — capture pain, outcome, constraints, and who&apos;s in the room
-              for <strong>{account.company}</strong>.
-            </>
-          )}
+          Identification is company, industry, and contact. Missing CRM enrichment — pain, tech
+          stack
+          {format === "ledger" ? ", ghost-ledger numbers" : ""}, and who attends the hackathon — is
+          asked here.
         </p>
       </div>
 
-      <SessionIntakeWithAttendees
-        sessionKey={sessionKey}
-        openingLine={
-          addingAccount ? CUSTOMER_SESSION_NEW_ACCOUNT_OPENING : CUSTOMER_SESSION_INTAKE_OPENING
-        }
-        accent="#1a73e8"
-        companyHint={account?.company || draftRef.current.name || "your organization"}
-        prefixSteps={
-          addingAccount ? customerSessionNewAccountPrefixSteps : customerSessionIntakePrefixSteps
-        }
-        headcountMin={1}
-        headcountMax={3}
-        headcountPrompt={CUSTOMER_SESSION_HEADCOUNT_PROMPT}
-        suffixSteps={[]}
-        onApplyField={(stepId, value) => {
-          const text = String(value);
-          if (stepId === "customerName") {
-            draftRef.current.name = text;
-            return;
-          }
-          if (stepId === "industryStack") {
-            draftRef.current.stack = text;
-            return;
-          }
-          if (stepId === "painPoint" || stepId === "cxoOutcome" || stepId === "constraints") {
-            onApplyScopeField({ [stepId]: text });
-          }
-        }}
-        onAttendeesChange={onAttendeesChange}
-        onComplete={() => {
-          if (addingAccount) {
-            const company = draftRef.current.name.trim() || "New customer account";
-            const stack = draftRef.current.stack;
-            onCreateAccount({
-              id: `crm-chat-${Date.now()}`,
-              company,
-              partnerOfRecord: parsePartnerFromIndustryStack(stack),
-              industry: parseIndustryFromStack(stack),
-              segment: "Commercial",
-            });
-          }
-          onComplete();
-        }}
-      />
+      {crmCovered && (
+        <div
+          className="rounded-dl border border-dl-border bg-dl-page p-4 text-sm"
+          data-testid="intake-crm-covered"
+        >
+          <p>
+            CRM already has identification and enrichment for{" "}
+            <span className="font-medium">{account?.company}</span>
+            {account?.contact ? ` (contact ${account.contact.name})` : ""}. Nothing left to ask in
+            chat.
+          </p>
+          <button
+            type="button"
+            className="mt-3 rounded-dl bg-dl-brand px-4 py-2 text-sm font-medium text-white"
+            data-testid="intake-continue-crm"
+            onClick={onComplete}
+          >
+            Continue to scope
+          </button>
+        </div>
+      )}
 
-      {!addingAccount && (
+      {phase === "fields" && plan.fieldSteps.length > 0 && (
+        <ConversationalIntake
+          sessionKey={sessionKey}
+          steps={plan.fieldSteps}
+          openingLine={plan.openingLine}
+          accent="#1a73e8"
+          onApply={applyField}
+          onComplete={finishFields}
+        />
+      )}
+
+      {phase === "attendees" && (
+        <SessionIntakeWithAttendees
+          sessionKey={sessionKey + 1}
+          openingLine="Next — who should attend the hackathon? I'll pull LinkedIn context for each person."
+          accent="#1a73e8"
+          companyHint={account?.company || draftRef.current.customerName || "your organization"}
+          prefixSteps={[]}
+          headcountMin={1}
+          headcountMax={3}
+          headcountPrompt={plan.headcountPrompt}
+          suffixSteps={[]}
+          onApplyField={() => {}}
+          onAttendeesChange={onAttendeesChange}
+          onComplete={onComplete}
+        />
+      )}
+
+      {canSkip && !crmCovered && (
         <button
           type="button"
           className="text-sm text-dl-brand hover:underline"
           data-testid="intake-skip-crm-defaults"
           onClick={onSkipWithCrmDefaults}
         >
-          Skip chat — use CRM scope defaults
-          {scope.painPoint ? " (already started)" : ""}
+          Skip remaining questions — keep CRM values
         </button>
       )}
     </div>

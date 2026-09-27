@@ -91,6 +91,15 @@ export interface CustomerSessionSeed {
   cxoOutcome: string;
   headcount: number;
   attendees: AttendeeProfile[];
+  /** Optional numbers from CRM / staged intake; blanks fall back to demo defaults. */
+  ledger?: Partial<{
+    monthlyToolSpend: number | null;
+    ticketsPerMonth: number | null;
+    minutesPerTicket: number | null;
+    hoursLostPerWeek: number | null;
+    hourlyLoadedCost: number | null;
+    monthlyChurnRevenue: number | null;
+  }>;
 }
 
 interface GhostContextValue {
@@ -199,17 +208,20 @@ export function GhostLedgerProvider({
   const seedFromCustomerSession = useCallback((seed: CustomerSessionSeed) => {
     setState((prev) => {
       const attendees = seed.attendees ?? [];
+      const L = seed.ledger ?? {};
+      const num = (v: number | null | undefined, fallback: number) =>
+        typeof v === "number" && Number.isFinite(v) ? v : fallback;
       const intake: LedgerIntake = {
         customerName: seed.customerName,
         industryStack: seed.industryStack,
         headcount: Math.max(attendees.length, seed.headcount || 3),
         attendees,
-        monthlyToolSpend: 45000,
-        ticketsPerMonth: 800,
-        minutesPerTicket: 12,
-        hoursLostPerWeek: 40,
-        hourlyLoadedCost: 85,
-        monthlyChurnRevenue: 25000,
+        monthlyToolSpend: num(L.monthlyToolSpend, 45000),
+        ticketsPerMonth: num(L.ticketsPerMonth, 800),
+        minutesPerTicket: num(L.minutesPerTicket, 12),
+        hoursLostPerWeek: num(L.hoursLostPerWeek, 40),
+        hourlyLoadedCost: num(L.hourlyLoadedCost, 85),
+        monthlyChurnRevenue: num(L.monthlyChurnRevenue, 25000),
       };
       const breakdown = computeCostOfInaction(intake);
       const freezeOptions = buildFreezeOptions(intake);
