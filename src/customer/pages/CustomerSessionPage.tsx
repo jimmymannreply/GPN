@@ -3,7 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { CustomerCrmStep } from "@/customer/components/CustomerCrmStep";
 import { CustomerIntakeStep } from "@/customer/components/CustomerIntakeStep";
 import { NextActionsPanel } from "@/customer/components/NextActionsPanel";
+import { RunUseCaseBoard } from "@/customer/components/RunUseCaseBoard";
 import { SessionStageStepper } from "@/customer/components/SessionStageStepper";
+import { generateRunCandidates } from "@/customer/data/generateRunCandidates";
 import {
   enrichmentFromMock,
   toCrmIdentity,
@@ -15,6 +17,7 @@ import {
   type CrmAccount,
   type LedgerFields,
 } from "@/customer/hooks/useCustomerSession";
+import type { UseCaseCandidate } from "@/hackathon/data/useCaseLibrary";
 
 const emptyLedger: LedgerFields = {
   monthlyToolSpend: null,
@@ -34,10 +37,10 @@ export function CustomerSessionPage() {
     setAttendees,
     updateScope,
     updateLedger,
+    setCandidatePool,
+    setRankedTop3,
     setStage,
   } = useCustomerSession();
-  const [roomAligned, setRoomAligned] = useState(false);
-  const [ranksReady, setRanksReady] = useState(false);
   const [addingViaChat, setAddingViaChat] = useState(false);
 
   const scopeReady =
@@ -72,19 +75,26 @@ export function CustomerSessionPage() {
     setStage("scope");
   };
 
-  const produceArtifacts = () => {
-    setStage("artifacts");
+  const buildJourneySeed = (poolOverride?: UseCaseCandidate[]) => {
     const stack = state.techStack.trim();
     const industryStack = state.crmAccount
       ? [state.crmAccount.industry, stack || state.crmAccount.segment].filter(Boolean).join(" · ")
       : stack;
-    const seed = {
+    const rankedPool =
+      poolOverride ??
+      (state.rankedTop3.length === 3
+        ? (state.rankedTop3
+            .map((id) => state.candidatePool.find((c) => c.id === id))
+            .filter(Boolean) as UseCaseCandidate[])
+        : undefined);
+    return {
       customerName: state.crmAccount?.company ?? "Customer",
       industryStack,
       painPoint: state.scope.painPoint,
       cxoOutcome: state.scope.cxoOutcome,
       headcount: Math.max(state.attendees.length, 4),
       attendees: state.attendees,
+      pool: rankedPool,
       ledger: {
         monthlyToolSpend: state.ledger.monthlyToolSpend,
         ticketsPerMonth: state.ledger.ticketsPerMonth,
@@ -94,9 +104,21 @@ export function CustomerSessionPage() {
         monthlyChurnRevenue: state.ledger.monthlyChurnRevenue,
       },
     };
-    sessionStorage.setItem("customer-session-seed-v1", JSON.stringify(seed));
+  };
+
+  const produceArtifacts = () => {
+    setStage("artifacts");
+    sessionStorage.setItem("customer-session-seed-v1", JSON.stringify(buildJourneySeed()));
     if (state.format === "draft") navigate("/customer/use-case-draft");
     else navigate("/customer/ghost-ledger");
+  };
+
+  const startHackathonDraft = () => {
+    const pool = state.rankedTop3
+      .map((id) => state.candidatePool.find((c) => c.id === id))
+      .filter(Boolean) as UseCaseCandidate[];
+    sessionStorage.setItem("customer-session-seed-v1", JSON.stringify(buildJourneySeed(pool)));
+    navigate("/customer/use-case-draft");
   };
 
   return (
@@ -311,7 +333,13 @@ export function CustomerSessionPage() {
 
               <button
                 type="button"
-                onClick={() => setStage("run")}
+                onClick={() => {
+                  if (state.candidatePool.length === 0) {
+                    setCandidatePool(generateRunCandidates(state));
+                  }
+                  setRankedTop3([]);
+                  setStage("run");
+                }}
                 className="rounded-dl bg-dl-brand px-4 py-2 text-sm font-medium text-white"
                 data-testid="plan-confirm"
               >
@@ -321,68 +349,14 @@ export function CustomerSessionPage() {
           )}
 
           {state.stage === "run" && (
-            <div className="space-y-6" data-testid="stage-run">
-              {state.format === "ledger" ? (
-                <>
-                  <div>
-                    <h2 className="text-lg font-semibold">Live ledger run</h2>
-                    <p className="mt-1 text-sm text-dl-text-secondary">
-                      Advance when the cost-of-waiting beat is ready, then choose next actions.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setStage("artifacts")}
-                    className="rounded-dl bg-dl-brand px-4 py-2 text-sm font-medium text-white"
-                    data-testid="run-open-ledger"
-                  >
-                    Finish run → next steps
-                  </button>
-                </>
-              ) : (
-                <>
-                  <div>
-                    <h2 className="text-lg font-semibold">Facilitated run checklist</h2>
-                    <p className="mt-1 text-sm text-dl-text-secondary">
-                      Align the room and confirm ranks before next actions.
-                    </p>
-                  </div>
-                  <ul className="space-y-3">
-                    <li>
-                      <label className="flex items-center gap-3 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={roomAligned}
-                          onChange={(e) => setRoomAligned(e.target.checked)}
-                          data-testid="run-room-aligned"
-                        />
-                        Room aligned
-                      </label>
-                    </li>
-                    <li>
-                      <label className="flex items-center gap-3 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={ranksReady}
-                          onChange={(e) => setRanksReady(e.target.checked)}
-                          data-testid="run-ranks-ready"
-                        />
-                        Ranks ready
-                      </label>
-                    </li>
-                  </ul>
-                  <button
-                    type="button"
-                    disabled={!roomAligned || !ranksReady}
-                    onClick={() => setStage("artifacts")}
-                    className="rounded-dl bg-dl-brand px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
-                    data-testid="run-continue"
-                  >
-                    Finish run → next steps
-                  </button>
-                </>
-              )}
-            </div>
+            <RunUseCaseBoard
+              painPoint={state.scope.painPoint}
+              candidates={state.candidatePool}
+              rankedTop3={state.rankedTop3}
+              onRankedChange={setRankedTop3}
+              onStartHackathonDraft={startHackathonDraft}
+              onSaveAndContinue={() => setStage("artifacts")}
+            />
           )}
 
           {(state.stage === "artifacts" || state.stage === "complete") && (

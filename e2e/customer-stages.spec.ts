@@ -98,6 +98,75 @@ test.describe("Customer staged session entry", () => {
     await expect(page.getByText(/organization/i).first()).toBeVisible();
   });
 
+  test("Run stage ranks top 3 then starts hackathon draft or next steps", async ({ page }) => {
+    await page.goto("/customer");
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "customer-staged-session-v1",
+        JSON.stringify({
+          format: "draft",
+          stage: "plan",
+          crmAccount: {
+            id: "crm-heartland-mutual",
+            company: "Heartland Mutual Insurance",
+            partnerOfRecord: "CDW",
+            industry: "Insurance",
+            contact: { name: "Michelle Dorsey", role: "VP Claims Operations" },
+            segment: "Enterprise",
+          },
+          techStack: "M365 · Guidewire · Azure",
+          attendees: [
+            {
+              name: "Michelle Dorsey",
+              role: "VP Claims Operations",
+              linkedIn: {
+                headline: "VP",
+                title: "VP Claims Operations",
+                company: "Heartland",
+                tenure: "3+",
+                focusAreas: ["AI"],
+                simulated: true,
+              },
+            },
+          ],
+          scope: {
+            painPoint: "Claims intake sits days in queues",
+            cxoOutcome: "Cut cycle time",
+            constraints: "Q2",
+          },
+          ledger: {
+            monthlyToolSpend: null,
+            ticketsPerMonth: null,
+            minutesPerTicket: null,
+            hoursLostPerWeek: null,
+            hourlyLoadedCost: null,
+            monthlyChurnRevenue: null,
+          },
+          candidatePool: [],
+          rankedTop3: [],
+          fundingStatus: "Draft",
+          fundingValueLabel: "$7,750,000 / year",
+        }),
+      );
+    });
+    await page.goto("/customer/session");
+    await page.getByTestId("plan-confirm").click();
+    await expect(page.getByTestId("stage-run")).toBeVisible();
+    await expect(page.getByTestId("run-candidate-grid")).toBeVisible();
+    const addButtons = page.locator('[data-testid^="run-add-"]');
+    await expect(addButtons).toHaveCount(8);
+    await expect(page.getByTestId("run-start-hackathon-draft")).toBeDisabled();
+    await addButtons.nth(0).click();
+    await addButtons.nth(1).click();
+    await addButtons.nth(2).click();
+    await expect(page.getByTestId("run-rank-1")).toBeVisible();
+    await expect(page.getByTestId("run-rank-3")).toBeVisible();
+    await expect(page.getByTestId("run-start-hackathon-draft")).toBeEnabled();
+
+    await page.getByTestId("run-save-continue").click();
+    await expect(page.getByTestId("stage-artifacts")).toBeVisible();
+  });
+
   test("produce artifacts opens draft plan board", async ({ page }) => {
     await page.goto("/customer");
     await page.evaluate(() => {

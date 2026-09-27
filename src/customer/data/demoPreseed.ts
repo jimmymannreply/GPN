@@ -70,6 +70,8 @@ export function applyDemoPreseed(format: SessionFormat): CustomerSessionState {
       hourlyLoadedCost: HEARTLAND.ledger?.hourlyLoadedCost ?? null,
       monthlyChurnRevenue: HEARTLAND.ledger?.monthlyChurnRevenue ?? null,
     },
+    candidatePool: [],
+    rankedTop3: [],
     fundingStatus: DEFAULT_FUNDING_CLAIM.status,
     fundingValueLabel: DEFAULT_FUNDING_CLAIM.annualValueLabel,
   };

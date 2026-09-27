@@ -121,6 +121,8 @@ export interface CustomerSessionSeed {
   cxoOutcome: string;
   headcount: number;
   attendees: AttendeeProfile[];
+  /** When set (e.g. Run top-3), use as the draft pool instead of regenerating 10. */
+  pool?: UseCaseCandidate[];
 }
 
 interface HackathonContextValue {
@@ -256,7 +258,11 @@ export function HackathonDraftProvider({
         headcount,
         attendees,
       };
-      const { industry, industryPhrase, pool } = tailorUseCasePool(intake);
+      const tailored = tailorUseCasePool(intake);
+      const pool =
+        seed.pool && seed.pool.length > 0 ? seed.pool : tailored.pool;
+      const industry = tailored.industry;
+      const industryPhrase = tailored.industryPhrase;
       const participants =
         attendees.length > 0
           ? attendees.map((attendee) => `${attendee.name} (${attendee.role})`)
@@ -278,7 +284,9 @@ export function HackathonDraftProvider({
           {
             event: "intake.seed",
             at: new Date().toISOString(),
-            detail: `${intake.customerName} · ${industryLabel(industry)}`,
+            detail: `${intake.customerName} · ${industryLabel(industry)}${
+              seed.pool?.length ? ` · top-${seed.pool.length}` : ""
+            }`,
           },
         ].slice(-40),
       };

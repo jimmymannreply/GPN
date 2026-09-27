@@ -10,6 +10,7 @@ import {
   DEFAULT_FUNDING_CLAIM,
   type FundingStatus,
 } from "@/partner-home/data/mockFunding";
+import type { UseCaseCandidate } from "@/hackathon/data/useCaseLibrary";
 import type { AttendeeProfile } from "@/shared/attendees/types";
 
 const STORAGE_KEY = "customer-staged-session-v1";
@@ -56,6 +57,10 @@ export interface CustomerSessionState {
   attendees: AttendeeProfile[];
   scope: { painPoint: string; cxoOutcome: string; constraints: string };
   ledger: LedgerFields;
+  /** Gemini pilot candidates shown on Run (6–8). */
+  candidatePool: UseCaseCandidate[];
+  /** Ordered top-3 use-case ids from the Run board. */
+  rankedTop3: string[];
   fundingStatus: FundingStatus;
   fundingValueLabel: string;
 }
@@ -84,6 +89,8 @@ function createInitialState(format: SessionFormat = "draft"): CustomerSessionSta
     attendees: [],
     scope: { ...defaultScope },
     ledger: { ...defaultLedger },
+    candidatePool: [],
+    rankedTop3: [],
     fundingStatus: "Draft",
     fundingValueLabel: DEFAULT_FUNDING_CLAIM.annualValueLabel,
   };
@@ -97,6 +104,8 @@ interface CustomerSessionContextValue {
   setAttendees: (attendees: AttendeeProfile[]) => void;
   updateScope: (patch: Partial<CustomerSessionState["scope"]>) => void;
   updateLedger: (patch: Partial<LedgerFields>) => void;
+  setCandidatePool: (pool: UseCaseCandidate[]) => void;
+  setRankedTop3: (ids: string[]) => void;
   setStage: (stage: SessionStage) => void;
   resetSession: () => void;
 }
@@ -119,6 +128,8 @@ export function CustomerSessionProvider({ children }: { children: ReactNode }) {
           techStack: parsed.techStack ?? "",
           ledger: { ...defaultLedger, ...parsed.ledger },
           scope: { ...defaultScope, ...parsed.scope },
+          candidatePool: parsed.candidatePool ?? [],
+          rankedTop3: parsed.rankedTop3 ?? [],
         };
       }
     } catch {
@@ -158,6 +169,14 @@ export function CustomerSessionProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, ledger: { ...prev.ledger, ...patch } }));
   }, []);
 
+  const setCandidatePool = useCallback((pool: UseCaseCandidate[]) => {
+    setState((prev) => ({ ...prev, candidatePool: pool }));
+  }, []);
+
+  const setRankedTop3 = useCallback((ids: string[]) => {
+    setState((prev) => ({ ...prev, rankedTop3: ids.slice(0, 3) }));
+  }, []);
+
   const setStage = useCallback((stage: SessionStage) => {
     setState((prev) => ({ ...prev, stage }));
   }, []);
@@ -175,6 +194,8 @@ export function CustomerSessionProvider({ children }: { children: ReactNode }) {
     setAttendees,
     updateScope,
     updateLedger,
+    setCandidatePool,
+    setRankedTop3,
     setStage,
     resetSession,
   };
