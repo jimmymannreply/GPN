@@ -63,6 +63,17 @@ test.describe("Customer staged session entry", () => {
     await expect(page.getByTestId("crm-selected")).toContainText("Contoso");
   });
 
+  test("add account via chat when not in CRM", async ({ page }) => {
+    await page.getByTestId("build-business-case").click();
+    await page.getByTestId("choose-use-case-draft").click();
+    await page.getByTestId("continue-session").click();
+    await page.getByTestId("crm-add-via-chat").click();
+    await expect(page.getByTestId("stage-intake")).toBeVisible();
+    await expect(page.getByText(/Add your account via intake/i)).toBeVisible();
+    await expect(page.getByTestId("conversational-intake")).toBeVisible();
+    await expect(page.getByTestId("intake-skip-crm-defaults")).toHaveCount(0);
+  });
+
   test("produce artifacts opens draft plan board", async ({ page }) => {
     await page.goto("/customer");
     await page.evaluate(() => {

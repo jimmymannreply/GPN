@@ -10,13 +10,14 @@ import {
   type MockCrmAccount,
 } from "@/customer/data/mockCrm";
 import { buildSessionAgenda } from "@/customer/data/sessionAgenda";
-import { useCustomerSession } from "@/customer/hooks/useCustomerSession";
+import { useCustomerSession, type CrmAccount } from "@/customer/hooks/useCustomerSession";
 
 export function CustomerSessionPage() {
   const navigate = useNavigate();
   const { state, setCrmAccount, setAttendees, updateScope, setStage } = useCustomerSession();
   const [roomAligned, setRoomAligned] = useState(false);
   const [ranksReady, setRanksReady] = useState(false);
+  const [addingViaChat, setAddingViaChat] = useState(false);
 
   const scopeReady =
     state.scope.painPoint.trim() &&
@@ -34,18 +35,25 @@ export function CustomerSessionPage() {
     setAttendees(attendeesFromCrmAccount(account));
   };
 
-  const goToScopeFromIntake = () => {
-    if (state.crmAccount) {
-      const crmScope = scopeFromCrmAccount(state.crmAccount);
+  const finishIntake = (useCrmDefaults: boolean) => {
+    const account = state.crmAccount;
+    if (
+      useCrmDefaults &&
+      account?.company &&
+      account.id &&
+      !account.id.startsWith("crm-chat-")
+    ) {
+      const crmScope = scopeFromCrmAccount(account);
       updateScope({
         painPoint: state.scope.painPoint.trim() || crmScope.painPoint,
         cxoOutcome: state.scope.cxoOutcome.trim() || crmScope.cxoOutcome,
         constraints: state.scope.constraints.trim() || crmScope.constraints,
       });
       if (state.attendees.length === 0) {
-        setAttendees(attendeesFromCrmAccount(state.crmAccount));
+        setAttendees(attendeesFromCrmAccount(account));
       }
     }
+    setAddingViaChat(false);
     setStage("scope");
   };
 
@@ -93,22 +101,35 @@ export function CustomerSessionPage() {
           {state.stage === "crm" && (
             <CustomerCrmStep
               selectedAccount={state.crmAccount}
-              onSelectAccount={selectCrmAccount}
+              onSelectAccount={(account) => {
+                setAddingViaChat(false);
+                selectCrmAccount(account);
+              }}
               onNext={() => {
                 if (!state.crmAccount) return;
+                setAddingViaChat(false);
+                setStage("intake");
+              }}
+              onAddViaChat={() => {
+                setAddingViaChat(true);
+                setAttendees([]);
+                updateScope({ painPoint: "", cxoOutcome: "", constraints: "" });
                 setStage("intake");
               }}
             />
           )}
 
-          {state.stage === "intake" && state.crmAccount && (
+          {state.stage === "intake" && (state.crmAccount?.company || addingViaChat) && (
             <CustomerIntakeStep
-              account={state.crmAccount}
+              account={addingViaChat ? null : state.crmAccount}
               scope={state.scope}
               onApplyScopeField={updateScope}
+              onCreateAccount={(account: CrmAccount) => {
+                setCrmAccount(account);
+              }}
               onAttendeesChange={setAttendees}
-              onComplete={goToScopeFromIntake}
-              onSkipWithCrmDefaults={goToScopeFromIntake}
+              onComplete={() => finishIntake(false)}
+              onSkipWithCrmDefaults={() => finishIntake(true)}
             />
           )}
 

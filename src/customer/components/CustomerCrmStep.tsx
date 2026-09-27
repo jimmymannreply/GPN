@@ -10,10 +10,12 @@ export function CustomerCrmStep({
   selectedAccount,
   onSelectAccount,
   onNext,
+  onAddViaChat,
 }: {
   selectedAccount: CrmAccount | null;
   onSelectAccount: (account: MockCrmAccount) => void;
   onNext: () => void;
+  onAddViaChat: () => void;
 }) {
   const [query, setQuery] = useState("");
   const demos = customerDemoAccounts();
@@ -34,7 +36,8 @@ export function CustomerCrmStep({
       <div>
         <h2 className="text-lg font-semibold">Find your account</h2>
         <p className="mt-1 text-sm text-dl-text-secondary">
-          Look yourself up in CRM, or pick a demo account. Intake chat comes next for scope details.
+          Look yourself up in CRM, pick a demo account, or add your account through intake chat if
+          you can&apos;t find it.
         </p>
       </div>
 
@@ -116,7 +119,7 @@ export function CustomerCrmStep({
           })}
           {filtered.length === 0 && (
             <li className="rounded-dl border border-dashed border-dl-border p-4 text-sm text-dl-text-secondary">
-              No match. Try another name or a demo account.
+              No match. Try another name, a demo account, or add your account via intake chat below.
             </li>
           )}
         </ul>
@@ -128,15 +131,25 @@ export function CustomerCrmStep({
         </p>
       )}
 
-      <button
-        type="button"
-        disabled={!selectedAccount}
-        onClick={onNext}
-        className="rounded-dl bg-dl-brand px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
-        data-testid="crm-next"
-      >
-        Next: Intake chat
-      </button>
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          disabled={!selectedAccount}
+          onClick={onNext}
+          className="rounded-dl bg-dl-brand px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+          data-testid="crm-next"
+        >
+          Next: Intake chat
+        </button>
+        <button
+          type="button"
+          onClick={onAddViaChat}
+          className="rounded-dl border border-dl-border px-4 py-2 text-sm font-medium"
+          data-testid="crm-add-via-chat"
+        >
+          Can&apos;t find it? Add my account via chat
+        </button>
+      </div>
     </div>
   );
 }
